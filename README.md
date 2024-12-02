@@ -20,8 +20,21 @@ With that in mind here are some goals I could or want to address at some point:
 - Unit tests for C++?
 - Port some solutions to C#, still on Linux (dotnet core)
     - Could switch entirely to C# for some challenges
+- Debuggers, use gdb on CLI and vscode
 - Improve / try different development environments
     - Add a language server to (neo)vim? Are there intelligent autocomplete options that know things like class member variables and such even if they are from header files elsewhere? How difficult / annoying is it to set up and how portable is it?
     - Any helpful vscode extensions?
+        - Compile and run code using vscode, for a single file or for the build chain solutions described above
     - Doom Emacs over SSH (I am coding on a VM)
+
+# How-To
+
+At some point I will hopefully add a proper build chain (see goals outlined above)
+
+Until then, here is how to run `day1` for reference
+
+```bash
+cd day1/
+g++ day1.cc -Wall && ./a.out
+```
 

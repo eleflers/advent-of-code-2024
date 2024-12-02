@@ -32,3 +32,6 @@
 *.out
 *.app
 
+# AoC things
+input
+

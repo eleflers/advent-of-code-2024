@@ -9,9 +9,9 @@ int main(int argc, char* argv[])
 {
     cout << "--\nAoC Day 2\n--\n";
     // For testing
-    int debuglimit = 5;
+    int debuglimit = 1;
     int debug = 0;
-    bool debugapply = false;
+    bool debugapply = true;
     if (debugapply) { cout << "DEBUG MODE : ON\nLINE LIMIT : " << debuglimit << "\n--" << endl; }
 
     // Input file
@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
 
         // TODO: Make general function number parser for this year
         // Read numbers
-        int i = 0, j = 0;
+        size_t i = 0, j = 0;
         while (i < line.length())
         {
             // i = start of no.
@@ -90,11 +90,9 @@ int main(int argc, char* argv[])
 
         // Check that difference between successive values is no more than 3, and not 0
         safe = isAsc || isDesc;
-        if (safe) {
-            for (size_t i = 1; safe && i < num.size(); i++) {
-                if (abs(num[i] - num[i-1]) == 0 || abs(num[i] - num[i-1]) > 3) {
-                    safe = false;
-                }
+        for (size_t i = 1; safe && i < num.size(); i++) {
+            if (abs(num[i] - num[i-1]) == 0 || abs(num[i] - num[i-1]) > 3) {
+                safe = false;
             }
         }
 

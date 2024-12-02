@@ -135,8 +135,19 @@ int main(int argc, char* argv[])
             if (removedItems == 0) {
                 // We didn't remove any items, so we can check our original vector
                 safe = isLevelSafe(num);
+                if (!safe) {
+                    // If we failed here, we still one last chance to remove an element
+                    // So try all those too
+                    for (size_t i = 0; i < num.size(); i++) {
+                        vector<int> subList = num;
+                        subList.erase(subList.begin() + i);
+                        listValidSubArrays.push_back(subList);
+                        removedItems = 1;
+                    }
+                }
             }
-            else if (removedItems == 1 && listValidSubArrays.size() > 0) {
+            // Might have some sub arrays to test, either from asc/desc stage or above
+            if (removedItems == 1 && listValidSubArrays.size() > 0) {
                 // We have some valid sub arrays to check
                 safe = false;
                 for (size_t i = 0; i < listValidSubArrays.size(); i++) {

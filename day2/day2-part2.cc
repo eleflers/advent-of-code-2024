@@ -130,14 +130,14 @@ int main(int argc, char* argv[])
         //for (int i = 0; i < num.size(); i++) {
         //    cout << num[i] << endl;
         //}
-
+        safe = false;
         if (isAsc || isDesc) {
             if (removedItems == 0) {
                 // We didn't remove any items, so we can check our original vector
                 safe = isLevelSafe(num);
                 if (!safe) {
                     // If we failed here, we still one last chance to remove an element
-                    // So try all those too
+                    // So add all those to the list of sub arrays for testing
                     for (size_t i = 0; i < num.size(); i++) {
                         vector<int> subList = num;
                         subList.erase(subList.begin() + i);
@@ -147,10 +147,10 @@ int main(int argc, char* argv[])
                 }
             }
             // Might have some sub arrays to test, either from asc/desc stage or above
-            if (removedItems == 1 && listValidSubArrays.size() > 0) {
+            // Make sure we don't do this if we are already found to be safe above
+            if (!safe && removedItems == 1 && listValidSubArrays.size() > 0) {
                 // We have some valid sub arrays to check
-                safe = false;
-                for (size_t i = 0; i < listValidSubArrays.size(); i++) {
+                for (size_t i = 0; !safe && i < listValidSubArrays.size(); i++) {
                     if (isLevelSafe(listValidSubArrays[i]))
                         safe = true;
                 }
@@ -178,12 +178,11 @@ bool isLevelSafe(vector<int> level)
     // Check that difference between successive values is no more than 3, and not 0
     // This function assumes that the array is already valid and sorted (ie. ascending
     // or descending order)
-    bool safe = true;
-    for (size_t i = 1; safe && i < level.size(); i++) {
+    for (size_t i = 1; i < level.size(); i++) {
         if (abs(level[i] - level[i-1]) == 0 || abs(level[i] - level[i-1]) > 3) {
-            safe = false;
+            return false;
         }
     }
-    return safe;
+    return true;
 }
 

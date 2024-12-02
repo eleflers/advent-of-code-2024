@@ -6,6 +6,7 @@
 using namespace std;
 
 bool isLevelSafe(vector<int> level);
+bool isLevelAscOrDesc(vector<int> level);
 
 int main(int argc, char* argv[])
 {
@@ -57,20 +58,17 @@ int main(int argc, char* argv[])
         // Program logic
         // Find out if all asc or desc
         bool safe;
-        bool isAsc;
-        bool isDesc;
+        bool isAscOrDesc;
 
-        // Make a sorted copy of the vector so we don't modify the original
-        vector<int> numSort = num;
-        sort(numSort.begin(), numSort.end());
+        // Keep track of whether we need subarrays
         int removedItems;
         vector<vector<int>> listValidSubArrays;
 
-        // If they match, we are ascending
-        isAsc = false;
-        if (num == numSort) {
+        isAscOrDesc = false;
+        // Are we already asc or desc?
+        if (isLevelAscOrDesc(num)) {
+            isAscOrDesc = true;
             removedItems = 0;
-            isAsc = true;
         }
         else {
             // Part 2: Tolerate 1 incorrect element, try removing each in turn
@@ -80,58 +78,22 @@ int main(int argc, char* argv[])
             // the differences between elements. So just store them all to try later
             for (size_t i = 0; i < num.size(); i++) {
                 vector<int> subList = num;
-                vector<int> subSorted = numSort;
-                auto sortedIndex = find(subSorted.begin(), subSorted.end(), num[i]);
-                if (sortedIndex == subSorted.end())
-                    cout << "ERROR: Didn't find the element we're about to remove in the sorted copy array, something went badly wrong!\n";
+                // Remove element i
                 subList.erase(subList.begin() + i);
-                subSorted.erase(sortedIndex);
                 // Check validity
-                if (subList == subSorted) {
+                if (isLevelAscOrDesc(subList)) {
                     //cout << "Found a valid sublist by removing element " << i << " of line " << debug << endl;
                     listValidSubArrays.push_back(subList);
                     removedItems = 1;
-                    isAsc = true;
+                    isAscOrDesc = true;
                 }
             }
         }
 
-        // If not Asc, try Desc
-        isDesc = false;
-        if (!isAsc) {
-            // May be descending instead, check by reversing sorted array
-            reverse(numSort.begin(), numSort.end());
-            if (num == numSort) {
-                removedItems = 0;
-                isDesc = true;
-            }
-            else {
-                // Try removing items, as above
-                for (size_t i = 0; i < num.size(); i++) {
-                    vector<int> subList = num;
-                    vector<int> subSorted = numSort;
-                    auto sortedIndex = find(subSorted.begin(), subSorted.end(), num[i]);
-                    if (sortedIndex == subSorted.end())
-                        cout << "ERROR: Didn't find the element we're about to remove in the sorted copy array, something went badly wrong!\n";
-                    subList.erase(subList.begin() + i);
-                    subSorted.erase(sortedIndex);
-                    // Check validity
-                    if (subList == subSorted) {
-                        //cout << "Found a valid sublist by removing element " << i << " of line " << debug << endl;
-                        listValidSubArrays.push_back(subList);
-                        removedItems = 1;
-                        isDesc = true;
-                    }
-                }
-            }
-        }
-
-        //cout << "Vector orig:\n";
-        //for (int i = 0; i < num.size(); i++) {
-        //    cout << num[i] << endl;
-        //}
+        // Now check 2nd part, difference between successive values
+        // We already know our list (or sublists) are asc/desc now
         safe = false;
-        if (isAsc || isDesc) {
+        if (isAscOrDesc) {
             if (removedItems == 0) {
                 // We didn't remove any items, so we can check our original vector
                 safe = isLevelSafe(num);
@@ -171,6 +133,29 @@ int main(int argc, char* argv[])
 
     cout << "--\nEnd.\n";
     return 0;
+}
+
+bool isLevelAscOrDesc(vector<int> level)
+{
+    // Check that the vector is a run of straight asc or desc values
+    // Try asc first
+    bool result = true;
+    for (size_t i = 1; result && i < level.size(); i++) {
+        if (level[i] <= level[i-1]) {
+            result = false;
+        }
+    }
+    // If asc, return now
+    if (result)
+        return true;
+    // Try desc, since we are not asc
+    result = true;
+    for (size_t i = 1; result && i < level.size(); i++) {
+        if (level[i] >= level[i-1]) {
+            result = false;
+        }
+    }
+    return result;
 }
 
 bool isLevelSafe(vector<int> level)

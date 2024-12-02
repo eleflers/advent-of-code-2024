@@ -46,16 +46,24 @@ int main(int argc, char* argv[])
     // Sort and compare them
     sort(column1.begin(), column1.end());
     sort(column2.begin(), column2.end());
-    long sum = 0;
+    long sumDistance = 0;
+    long sumSimilarity = 0;
     for (int i = 0; i < column1.size(); i++)
     {
         // cout << "Element " << i << ": " << column1[i] << ", " << column2[i] << endl;
         int distance = abs(column1[i] - column2[i]);
-        sum += distance;
+        sumDistance += distance;
+
+        // How many times does num1 appear in 2nd col.?
+        // This could be optimised for larger datasets, because both columns are already sorted
+        int count = std::count(column2.begin(), column2.end(), column1[i]);
+        // "Similarity score" is the num1 in question multiplied by its count in col. 2
+        sumSimilarity += column1[i] * count;
     }
 
     // Output
-    cout << "Sum of location distances = " << sum << endl;
+    cout << "Sum of location distances = " << sumDistance << endl;
+    cout << "Sum of similarity = " << sumSimilarity << endl;
 
     // Finished with input file
     input.close();

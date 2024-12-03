@@ -36,10 +36,9 @@ int main(int argc, char* argv[])
 
     string line;
     size_t pos;
-    //regex searchpattern("mul\\(\\d+,\\d+\\)");
-    //smatch match;
-    // TODO: Disable may cross line boundaries, be prepared to check status at the
+    // Disable may cross line boundaries, be prepared to check status at the
     // end of this while loop and log it for the next iteration to start out disabled
+    bool startDisabled = false;
     while (getline(input, line) && (!debugapply || debug < debuglimit))
     {
         debug++;
@@ -49,9 +48,13 @@ int main(int argc, char* argv[])
         // Look for "do()" and "don't()" strings in the text
         // A line starts out true by default, but after a "don't()" string
         // any mulitplications are ignored until a "do()" string occurs
-        pos = line.find("don't()");
         queue<int> disablePos;
         queue<int> enablePos;
+        // We may have a carry-over status of don't already, add it if so
+        if (startDisabled) {
+            disablePos.push(0);
+        }
+        pos = line.find("don't()");
         if (pos != string::npos) {
             // Found a deactivation, so we need to log everything
             while (pos != string::npos) {
@@ -155,6 +158,12 @@ int main(int argc, char* argv[])
                     pos = string::npos;
                 }
             }
+        }
+        // Carryover last status
+        if (!disableZones.empty() && disableZones.front().second == line.length()) {
+            // Then there was an active disable zone in place at the end of the line
+            cout << "Warning: Line " << debug << " was DISABLED at end of line\n";
+            startDisabled = true;
         }
     }
 

@@ -12,10 +12,11 @@ int process_match(string line);
 int main(int argc, char* argv[])
 {
     cout << "--\nAoC Day 3\n--\n";
+    // Part 2: 111905416 - too high
     // For testing
     int debuglimit = 1;
     int debug = 0;
-    bool debugapply = true;
+    bool debugapply = false;
     if (debugapply) { cout << "DEBUG MODE : ON\nLINE LIMIT : " << debuglimit << "\n--" << endl; }
 
     // TODO: Add debug flag detection from CLI, and check whether file exists
@@ -55,13 +56,13 @@ int main(int argc, char* argv[])
             // Found a deactivation, so we need to log everything
             while (pos != string::npos) {
                 disablePos.push(pos);
-                cout << "Logged a don't() string at line " << debug << " pos " << pos << endl;
+                //cout << "Logged a don't() string at line " << debug << " pos " << pos << endl;
                 pos = line.find("don't()", pos+1);
             }
             pos = 0;
             do {
                 enablePos.push(pos);
-                cout << "Logged a do() string at line " << debug << " pos " << pos << endl;
+                //cout << "Logged a do() string at line " << debug << " pos " << pos << endl;
                 pos = line.find("do()", pos+1);
             } while (pos != string::npos);
         }
@@ -84,11 +85,12 @@ int main(int argc, char* argv[])
             }
             pair<int,int> zone = {start, end};
             disableZones.push(zone);
-            cout << "Found disable zone from start: " << start << " to end: " << end << endl;
+            //cout << "Found disable zone from start: " << start << " to end: " << end << endl;
             // Need to discard any following disables that are in this interval before continuing
             // as they happen in a region that is already disabled
-            start = disablePos.front();
-            while (start <= end) {
+            if (!disablePos.empty())
+                start = disablePos.front();
+            while (!disablePos.empty() && start < end) {
                 // Discard it
                 disablePos.pop();
                 start = disablePos.front();
@@ -97,6 +99,7 @@ int main(int argc, char* argv[])
 
         // Search manually
         // For a starting 'm'
+        //cout << "Looking for first 'm'" << endl;
         pos = line.find_first_of("m");
         int offset = 0; // Skip parts of the string we already searched
         while (pos != string::npos && pos != line.length())
@@ -111,6 +114,7 @@ int main(int argc, char* argv[])
                 bool inDisabledZone;
                 while (!disableZones.empty() && disableZones.front().second < pos) {
                     // Discard all zones that end before we start
+                    //cout << "Discarding zone " << disableZones.front().first << ", " << disableZones.front().second << endl;
                     disableZones.pop();
                 }
                 if (disableZones.empty()) {
@@ -125,6 +129,7 @@ int main(int argc, char* argv[])
                     // We can just jump straight to the end of the disabled zone before
                     // doing any more string searching
                     offset = disableZones.front().second;
+                    //cout << pos << " is in disabled zone\n";
                 }
                 else {
                     // Potential match

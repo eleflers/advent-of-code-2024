@@ -38,8 +38,9 @@ int main(int argc, char* argv[])
     while (getline(input, line) && (!debugapply || debug < debuglimit))
     {
         debug++;
-        if (debugapply)
-            cout << line << endl;
+        if (debugapply) {
+            //cout << line << endl;
+        }
 
         linearray.push_back(line);
     }
@@ -56,7 +57,7 @@ int main(int argc, char* argv[])
         int pos;
         int offset = 0;
         line = linearray[row];
-        cout << "Processing line " << row << ": '" << line << "'\n";
+        //cout << "Processing line " << row << ": '" << line << "'\n";
         pos = line.find(searchword[0]);
         // Loop over every X in the line
         while (pos != string::npos) {
@@ -77,7 +78,7 @@ int main(int argc, char* argv[])
 }
 
 int countWordAtPosX(int posX, int posY, vector<string> linearray, string word) {
-    cout << "Given '" << word[0] << "' to process at line " << posY << " column " << posX << endl;
+    //cout << "Given '" << word[0] << "' to process at line " << posY << " column " << posX << endl;
     int result = 0;
     result += searchWordInDirection(posX, posY, linearray, word,  1,  1, "↘");
     result += searchWordInDirection(posX, posY, linearray, word,  1,  0, "→");

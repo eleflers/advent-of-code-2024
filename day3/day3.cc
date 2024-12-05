@@ -18,6 +18,7 @@ int main(int argc, char* argv[])
     // Part 2: 111905416 - too high
     // Part 2: 143174327 - too high, a couple lines were disabled at end of line so carried over
     // Part 2: 94564792 - refactor into functions, now too low
+    // Part 2: 108609098 - As above, but persistDisabledState to false, each line separate. Still wrong
 
     // For testing
     int debuglimit = 1;
@@ -55,8 +56,9 @@ int main(int argc, char* argv[])
 
         // Part 2
         // Look for "do()" and "don't()" strings in the text
-        // A line starts out true by default, but after a "don't()" string
+        // The program starts out true by default, but after a "don't()" string
         // any mulitplications are ignored until a "do()" string occurs
+        // It does not say anything about lines, only "scanning through memory"
         queue<int> disablePos = find_all_substr_pos(line, "don't()");
         queue<int> enablePos = find_all_substr_pos(line, "do()");
         // Find disable zones

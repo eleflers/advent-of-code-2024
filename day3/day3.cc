@@ -8,18 +8,24 @@
 using namespace std;
 
 int process_match(string line);
+queue<int> find_all_substr_pos(string line, string search);
+queue<pair<int,int>> find_disable_zones(queue<int> disablePos, queue<int> enablePos, bool startDisabled, int linelength);
+bool is_pos_in_zone(int pos, queue<pair<int,int>>& zones);
 
 int main(int argc, char* argv[])
 {
     cout << "--\nAoC Day 3\n--\n";
     // Part 2: 111905416 - too high
     // Part 2: 143174327 - too high, a couple lines were disabled at end of line so carried over
+    // Part 2: 94564792 - refactor into functions, now too low
+
     // For testing
     int debuglimit = 1;
     int debug = 0;
     bool debugapply = false;
     if (debugapply) { cout << "DEBUG MODE : ON\nLINE LIMIT : " << debuglimit << "\n--" << endl; }
 
+    // Command line args
     // TODO: Add debug flag detection from CLI, and check whether file exists
     string filename = "input";
     if (argc == 1) {
@@ -29,17 +35,19 @@ int main(int argc, char* argv[])
         filename = argv[1];
         cout << "Taking CLI input file name '" << filename << "'\n";
     }
-    // Input file
-    ifstream input(filename);
 
     // Variables for output
     long sum = 0;
 
+    // Input file
+    ifstream input(filename);
     string line;
     size_t pos;
+
     // Disable may cross line boundaries, be prepared to check status at the
     // end of this while loop and log it for the next iteration to start out disabled
     bool startDisabled = false;
+    bool persistDisabledStateAcrossLines = true;
     while (getline(input, line) && (!debugapply || debug < debuglimit))
     {
         debug++;
@@ -49,58 +57,10 @@ int main(int argc, char* argv[])
         // Look for "do()" and "don't()" strings in the text
         // A line starts out true by default, but after a "don't()" string
         // any mulitplications are ignored until a "do()" string occurs
-        queue<int> disablePos;
-        queue<int> enablePos;
-        // We may have a carry-over status of don't already, add it if so
-        if (startDisabled) {
-            disablePos.push(-1);
-            // -1 because it takes effect before the line starts
-            // if pos 0 finds a 'do()' string that needs to take precedence
-            // Check that a negative value doesn't cause issues
-        }
-        pos = line.find("don't()");
-        while (pos != string::npos) {
-            // Found a deactivation, so we need to log everything
-            disablePos.push(pos);
-            //cout << "Logged a don't() string at line " << debug << " pos " << pos << endl;
-            pos = line.find("don't()", pos+1);
-        }
-        pos = line.find("do()");
-        while (pos != string::npos) {
-            enablePos.push(pos);
-            //cout << "Logged a do() string at line " << debug << " pos " << pos << endl;
-            pos = line.find("do()", pos+1);
-        }
+        queue<int> disablePos = find_all_substr_pos(line, "don't()");
+        queue<int> enablePos = find_all_substr_pos(line, "do()");
         // Find disable zones
-        queue<pair<int,int>> disableZones;
-        while (!disablePos.empty()) {
-            int start = disablePos.front();
-            disablePos.pop();
-            // We are now in a disable zone
-            // Find end, if any
-            int end = string::npos;
-            while (!enablePos.empty() && (end == string::npos || end < start) ) {
-                end = enablePos.front();
-                enablePos.pop();
-            }
-            if (end < start) {
-                // Didn't find an end, so set to end of line
-                // TODO: This may not be the correct thing to do for the solution answer!
-                end = line.length();
-            }
-            pair<int,int> zone = {start, end};
-            disableZones.push(zone);
-            //cout << "Found disable zone from start: " << start << " to end: " << end << endl;
-            // Need to discard any following disables that are in this interval before continuing
-            // as they happen in a region that is already disabled
-            if (!disablePos.empty())
-                start = disablePos.front();
-            while (!disablePos.empty() && start < end) {
-                // Discard it
-                disablePos.pop();
-                start = disablePos.front();
-            }
-        }
+        queue<pair<int,int>> disableZones = find_disable_zones(disablePos, enablePos, startDisabled, line.length());
 
         // Search manually
         // For a starting 'm'
@@ -112,22 +72,14 @@ int main(int argc, char* argv[])
             // Matched 'm'
             //cout << "Found starting 'm' line " << debug << " at pos. " << pos << endl;
             int start = pos;
+            // Look for a closing bracket for a potential match
             pos = line.find_first_of(")", start);
             if (pos != string::npos) {
+                // Dealing with potential mul(X,Y)
+
                 // Part 2, we may be in an invalid region of the line
                 // Check this first
-                bool inDisabledZone;
-                while (!disableZones.empty() && disableZones.front().second < pos) {
-                    // Discard all zones that end before we start
-                    //cout << "Discarding zone " << disableZones.front().first << ", " << disableZones.front().second << endl;
-                    disableZones.pop();
-                }
-                if (disableZones.empty()) {
-                    inDisabledZone = false;
-                } else {
-                    inDisabledZone = ( disableZones.front().first < pos );
-                    // Don't need to check (disableZones.front().second > pos), because the while loop did it above
-                }
+                bool inDisabledZone = is_pos_in_zone(pos, disableZones);
 
                 if (inDisabledZone) {
                     // Don't bother checking the string
@@ -137,22 +89,22 @@ int main(int argc, char* argv[])
                     //cout << pos << " is in disabled zone\n";
                 }
                 else {
-                    // Potential match
+                    // Potential match & not in disable zone
                     // We don't care if it is valid or not, if invalid we just return 0
                     //cout << "Found potential closing ')' line " << debug << " at pos. " << pos << endl;
-                    int end = pos + 1;
-                    int result = process_match(line.substr(start,end-start));
+                    int length = (pos + 1) - start;
+                    int result = process_match(line.substr(start, length));
                     sum += result;
-                    //line = line.substr(end); // For next cycle of loop
 
-                    // Next match?
-                    // Can do this here so it only happens if there's at least 1 ")" remaining in the line
-                    // to save on checking pointless "m"s
+                    // Update offset
+                    // If valid match, we can start after the end of the entire match string
+                    // Else we can only offset to the char. after the first 'm'
                     if (result > 0)
-                        offset = end;
+                        offset = start + length;
                     else
                         offset = start + 1;
                 }
+                // Find next 'm' for next loop iteration
                 if (offset != line.length()) {
                     pos = line.find_first_of("m", offset);
                 }
@@ -161,10 +113,12 @@ int main(int argc, char* argv[])
                 }
             }
         }
-        // Carryover last status
-        if (!disableZones.empty() && disableZones.front().second == line.length()) {
+
+        // Finished with entire line
+        // Carryover last status if enabled
+        if (persistDisabledStateAcrossLines && !disableZones.empty() && disableZones.front().second == line.length()) {
             // Then there was an active disable zone in place at the end of the line
-            cout << "Warning: Line " << debug << " was DISABLED at end of line\n";
+            cout << "Warning: Line " << debug << " was DISABLED at end of line, persisting across to next line\n";
             startDisabled = true;
         }
     }
@@ -235,5 +189,81 @@ int process_match(string line)
     int num1 = stoi(line.substr(posNum1, posDelim));
     int num2 = stoi(line.substr(posNum2, line.length()-1));
     return num1 * num2;
+}
+
+queue<int> find_all_substr_pos(string line, string search)
+{
+    queue<int> result;
+    size_t pos = line.find(search);
+    while (pos != string::npos) {
+        // Found something, so log and repeat until we run out
+        result.push(pos);
+        //cout << "Logged a '" << search << "' string at line " << debug << " pos " << pos << endl;
+        pos = line.find(search, pos+1);
+    }
+
+    return result;
+}
+
+queue<pair<int,int>> find_disable_zones(queue<int> disablePos, queue<int> enablePos, bool startDisabled, int linelength)
+{
+    queue<pair<int,int>> result;
+
+    while (startDisabled || !disablePos.empty()) {
+        int start;
+        if (startDisabled) {
+            start = 0;
+            startDisabled = false;
+        }
+        else {
+            start = disablePos.front();
+            disablePos.pop();
+        }
+        // We are now in a disable zone
+        // Find end, if any
+        int end = string::npos;
+        while (!enablePos.empty() && (end == string::npos || end < start) ) {
+            end = enablePos.front();
+            enablePos.pop();
+        }
+        // Loop above keeps running until we have end >= start or we run out of enables
+        // Check what we ended up with
+        if (end == string::npos || end < start) {
+            // Didn't find an end, so set to end of line
+            end = linelength;
+        }
+        // Make and add what we found to the list
+        // Unless start and end are the same pos. in which case we don't bother (line started out disabled
+        // but was immediately overruled by a "do()" at pos. 0 for e.g.)
+        if (start != end) {
+            pair<int,int> zone = {start, end};
+            result.push(zone);
+            //cout << "Found disable zone from start: " << start << " to end: " << end << endl;
+        }
+        // Need to discard any following disables that are in this interval before continuing
+        // as they happen in a region that is already disabled
+        while (!disablePos.empty() && disablePos.front() < end) {
+            // Discard it
+            disablePos.pop();
+        }
+    }
+
+    return result;
+}
+
+// Also discards any zones to the left of pos for efficiency
+bool is_pos_in_zone(int pos, queue<pair<int,int>>& zones) {
+    // Discard all zones to the left of us
+    while (!zones.empty() && zones.front().second < pos) {
+        //cout << "Discarding zone " << zones.front().first << ", " << zones.front().second << endl;
+        zones.pop();
+    }
+    // Check remaining zones (if any) to see if we are inside one
+    if (!zones.empty()) {
+        // Don't need to check (disableZones.front().second > pos), because the while loop did it above
+        return ( zones.front().first <= pos );
+    } else {
+        return false;
+    }
 }
 

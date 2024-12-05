@@ -13,6 +13,7 @@ int main(int argc, char* argv[])
 {
     cout << "--\nAoC Day 3\n--\n";
     // Part 2: 111905416 - too high
+    // Part 2: 143174327 - too high, a couple lines were disabled at end of line so carried over
     // For testing
     int debuglimit = 1;
     int debug = 0;
@@ -52,22 +53,23 @@ int main(int argc, char* argv[])
         queue<int> enablePos;
         // We may have a carry-over status of don't already, add it if so
         if (startDisabled) {
-            disablePos.push(0);
+            disablePos.push(-1);
+            // -1 because it takes effect before the line starts
+            // if pos 0 finds a 'do()' string that needs to take precedence
+            // Check that a negative value doesn't cause issues
         }
         pos = line.find("don't()");
-        if (pos != string::npos) {
+        while (pos != string::npos) {
             // Found a deactivation, so we need to log everything
-            while (pos != string::npos) {
-                disablePos.push(pos);
-                //cout << "Logged a don't() string at line " << debug << " pos " << pos << endl;
-                pos = line.find("don't()", pos+1);
-            }
-            pos = 0;
-            do {
-                enablePos.push(pos);
-                //cout << "Logged a do() string at line " << debug << " pos " << pos << endl;
-                pos = line.find("do()", pos+1);
-            } while (pos != string::npos);
+            disablePos.push(pos);
+            //cout << "Logged a don't() string at line " << debug << " pos " << pos << endl;
+            pos = line.find("don't()", pos+1);
+        }
+        pos = line.find("do()");
+        while (pos != string::npos) {
+            enablePos.push(pos);
+            //cout << "Logged a do() string at line " << debug << " pos " << pos << endl;
+            pos = line.find("do()", pos+1);
         }
         // Find disable zones
         queue<pair<int,int>> disableZones;
@@ -76,12 +78,12 @@ int main(int argc, char* argv[])
             disablePos.pop();
             // We are now in a disable zone
             // Find end, if any
-            int end = start;
-            while (!enablePos.empty() && end <= start) {
+            int end = string::npos;
+            while (!enablePos.empty() && (end == string::npos || end < start) ) {
                 end = enablePos.front();
                 enablePos.pop();
             }
-            if (end == start) {
+            if (end < start) {
                 // Didn't find an end, so set to end of line
                 // TODO: This may not be the correct thing to do for the solution answer!
                 end = line.length();

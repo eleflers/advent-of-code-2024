@@ -68,6 +68,8 @@ int main(int argc, char* argv[])
             offset = pos+1;
             pos = line.find(searchword[0], offset);
         }
+
+        // Part 2:
     }
 
     // Output
@@ -94,15 +96,24 @@ int countWordAtPosX(int posX, int posY, vector<string> linearray, string word) {
 int searchWordInDirection(int posX, int posY, vector<string> linearray, string word, int deltaX, int deltaY, string direction) {
     int sizeX = linearray[0].length();
     int sizeY = linearray.size();
-    // Check out of bounds
-    // If word is "XMAS" we jump 4-1=3 times in any direction
+    // Check if starting position is out of bounds, since for part 2 we are finding the middle of a word
+    if (posX < 0 || posX >= sizeX) {
+        cout << "WARN: Word search at pos [" << posX << "," << posY << "] out of bounds in X direction\n";
+        return 0;
+    }
+    if (posY < 0 || posY >= sizeY) {
+        cout << "WARN: Word search at pos [" << posX << "," << posY << "] out of bounds in Y direction\n";
+        return 0;
+    }
+    // Check if search goes out of bounds
+    // E.g. if word is "XMAS" we jump 4-1=3 times in any direction
     int wordSize = word.length();
     if ( (posX + (wordSize - 1) * deltaX) < 0 || (posX + (wordSize - 1) * deltaX) >= sizeX ) {
-        cout << "WARN: Word search at pos [" << posX << "," << posY << "] delta [" << deltaX << "," << deltaY << "] (" << direction << ") out of bounds in X direction\n";
+        //cout << "WARN: Word search at pos [" << posX << "," << posY << "] delta [" << deltaX << "," << deltaY << "] (" << direction << ") out of bounds in X direction\n";
         return 0;
     }
     if ( (posY + (wordSize - 1) * deltaY) < 0 || (posY + (wordSize - 1) * deltaY) >= sizeY ) {
-        cout << "WARN: Word search at pos [" << posX << "," << posY << "] delta [" << deltaX << "," << deltaY << "] (" << direction << ") out of bounds in Y direction\n";
+        //cout << "WARN: Word search at pos [" << posX << "," << posY << "] delta [" << deltaX << "," << deltaY << "] (" << direction << ") out of bounds in Y direction\n";
         return 0;
     }
 
@@ -113,7 +124,7 @@ int searchWordInDirection(int posX, int posY, vector<string> linearray, string w
             return 0;
         }
     }
-    cout << "Found word '" << word << "' at position [" << posX << "," << posY << "] delta [" << deltaX << "," << deltaY << "] (" << direction << ")\n";
+    //cout << "Found word '" << word << "' at position [" << posX << "," << posY << "] delta [" << deltaX << "," << deltaY << "] (" << direction << ")\n";
     return 1;
 }
 

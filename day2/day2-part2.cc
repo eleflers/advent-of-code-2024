@@ -17,8 +17,17 @@ int main(int argc, char* argv[])
     bool debugapply = false;
     if (debugapply) { cout << "DEBUG MODE : ON\nLINE LIMIT : " << debuglimit << "\n--" << endl; }
 
+    // TODO: Add debug flag detection from CLI, and check whether file exists
+    string filename = "input";
+    if (argc == 1) {
+        cout << "Assume default input file '" << filename << "'\n";
+    }
+    else if (argc > 1) {
+        filename = argv[1];
+        cout << "Taking CLI input file name '" << filename << "'\n";
+    }
     // Input file
-    ifstream input("input");
+    ifstream input(filename);
 
     // Variables for output
     int sum = 0;

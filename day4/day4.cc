@@ -30,7 +30,8 @@ int main(int argc, char* argv[])
     ifstream input(filename);
 
     // Variables for output
-    int sum = 0;
+    int sumP1 = 0;
+    int sumP2 = 0;
 
     // Read file and get numbers
     string line;
@@ -50,7 +51,7 @@ int main(int argc, char* argv[])
     // Iterate over array
     int sizeX = linearray[0].length();
     int sizeY = linearray.size();
-    string searchword = "XMAS";
+    string searchp1 = "XMAS";
     for (size_t row = 0; row < sizeY; row++) {
         // Trying to find any word XMAS written in any direction
         // Look for 'X' to start
@@ -58,23 +59,55 @@ int main(int argc, char* argv[])
         int offset = 0;
         line = linearray[row];
         //cout << "Processing line " << row << ": '" << line << "'\n";
-        pos = line.find(searchword[0]);
+        pos = line.find(searchp1[0]);
         // Loop over every X in the line
         while (pos != string::npos) {
             // Found an X, process it
-            sum += countWordAtPosX(pos, row, linearray, searchword);
+            sumP1 += countWordAtPosX(pos, row, linearray, searchp1);
 
             // Set up next cycle
             offset = pos+1;
-            pos = line.find(searchword[0], offset);
+            pos = line.find(searchp1[0], offset);
         }
-
+    }
+    for (size_t row = 0; row < sizeY; row++) {
         // Part 2:
+        // Now looking for MAS in a cross with A in centre like
+        //
+        // ..M.S..
+        // ...A...
+        // ..M.S..
+        //
+        // So search for A's, then look for MAS and SAM from top 2 corners
+        int pos;
+        int offset = 0;
+        line = linearray[row];
+        pos = line.find("A");
+        // Loop over every A in the line
+        while (pos != string::npos) {
+            // Found an A, process it
+            int direction1 = 0;
+            direction1 += searchWordInDirection(pos-1, row-1, linearray, "MAS", 1, 1, "↘");
+            direction1 += searchWordInDirection(pos+1, row+1, linearray, "MAS", -1, -1, "↖");
+            int direction2 = 0;
+            direction2 += searchWordInDirection(pos-1, row+1, linearray, "MAS", 1, -1, "↗");
+            direction2 += searchWordInDirection(pos+1, row-1, linearray, "MAS", -1, 1, "↙");
+
+            if (direction1 == 1 && direction2 == 1) {
+                // Both elements of cross are present, so record it
+                sumP2++;
+            }
+
+            // Set up next cycle
+            offset = pos+1;
+            pos = line.find("A", offset);
+        }
     }
 
     // Output
     cout << "--\n";
-    cout << "Sum = " << sum << endl;
+    cout << "Sum P1 = " << sumP1 << endl;
+    cout << "Sum P2 = " << sumP2 << endl;
     cout << "--\nEnd.\n";
     return 0;
 }
@@ -98,11 +131,11 @@ int searchWordInDirection(int posX, int posY, vector<string> linearray, string w
     int sizeY = linearray.size();
     // Check if starting position is out of bounds, since for part 2 we are finding the middle of a word
     if (posX < 0 || posX >= sizeX) {
-        cout << "WARN: Word search at pos [" << posX << "," << posY << "] out of bounds in X direction\n";
+        //cout << "WARN: Word search at pos [" << posX << "," << posY << "] out of bounds in X direction\n";
         return 0;
     }
     if (posY < 0 || posY >= sizeY) {
-        cout << "WARN: Word search at pos [" << posX << "," << posY << "] out of bounds in Y direction\n";
+        //cout << "WARN: Word search at pos [" << posX << "," << posY << "] out of bounds in Y direction\n";
         return 0;
     }
     // Check if search goes out of bounds

@@ -200,7 +200,7 @@ queue<int> find_all_substr_pos(string line, string search)
     while (pos != string::npos) {
         // Found something, so log and repeat until we run out
         result.push(pos);
-        //cout << "Logged a '" << search << "' string at line " << debug << " pos " << pos << endl;
+        //cout << "Logged a '" << search << "' string at pos " << pos << endl;
         pos = line.find(search, pos+1);
     }
 

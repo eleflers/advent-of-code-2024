@@ -19,6 +19,7 @@ int main(int argc, char* argv[])
     // Part 2: 143174327 - too high, a couple lines were disabled at end of line so carried over
     // Part 2: 94564792 - refactor into functions, now too low
     // Part 2: 108609098 - As above, but persistDisabledState to false, each line separate. Still wrong
+    // Part 2: 107862689 - Combined input into single line
 
     // For testing
     int debuglimit = 1;
@@ -45,11 +46,22 @@ int main(int argc, char* argv[])
     string line;
     size_t pos;
 
+    // 'Corrupted memory' might be continuous over lines, try combining the file contents into a single string
+    string inputstring = "";
+    while (getline(input, line) && (!debugapply || debug < debuglimit)) {
+        debug++;
+        inputstring += line;
+    }
+    if (debugapply) {
+        cout << "One line: '" << inputstring << "'" << endl;
+    }
+
     // Disable may cross line boundaries, be prepared to check status at the
     // end of this while loop and log it for the next iteration to start out disabled
     bool startDisabled = false;
     bool persistDisabledStateAcrossLines = true;
-    while (getline(input, line) && (!debugapply || debug < debuglimit))
+    //while (getline(input, line) && (!debugapply || debug < debuglimit))
+    line = inputstring; debug = 0;
     {
         debug++;
         //cout << line << "\n--" << endl;

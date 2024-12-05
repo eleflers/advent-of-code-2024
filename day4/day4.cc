@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
     // Iterate over array
     int sizeX = linearray[0].length();
     int sizeY = linearray.size();
-    string searchp1 = "XMAS";
+    string searchP1 = "XMAS";
     for (size_t row = 0; row < sizeY; row++) {
         // Trying to find any word XMAS written in any direction
         // Look for 'X' to start
@@ -59,41 +59,40 @@ int main(int argc, char* argv[])
         int offset = 0;
         line = linearray[row];
         //cout << "Processing line " << row << ": '" << line << "'\n";
-        pos = line.find(searchp1[0]);
+        pos = line.find(searchP1[0]);
         // Loop over every X in the line
         while (pos != string::npos) {
             // Found an X, process it
-            sumP1 += countWordAtPosX(pos, row, linearray, searchp1);
+            sumP1 += countWordAtPosX(pos, row, linearray, searchP1);
 
             // Set up next cycle
             offset = pos+1;
-            pos = line.find(searchp1[0], offset);
+            pos = line.find(searchP1[0], offset);
         }
     }
+    string searchP2 = "MAS";
     for (size_t row = 0; row < sizeY; row++) {
         // Part 2:
-        // Now looking for MAS in a cross with A in centre like
+        // Now looking for "MAS" in a cross with A in centre like: ..M.S..
+        //                                                         ...A...
+        //                                                         ..M.S..
         //
-        // ..M.S..
-        // ...A...
-        // ..M.S..
-        //
-        // So search for A's, then look for MAS and SAM from top 2 corners
+        // So search for 'A's, then look for "MAS" and "SAM" from top 2 corners
+        // Or just search "MAS" from all 4 corners, it can only ever appear twice for our pattern
         int pos;
         int offset = 0;
         line = linearray[row];
-        pos = line.find("A");
+        // Search middle letter (e.g. "MAS" -> "A")
+        pos = line.find(searchP2[1]);
         // Loop over every A in the line
         while (pos != string::npos) {
             // Found an A, process it
-            int direction1 = 0;
-            direction1 += searchWordInDirection(pos-1, row-1, linearray, "MAS", 1, 1, "↘");
-            direction1 += searchWordInDirection(pos+1, row+1, linearray, "MAS", -1, -1, "↖");
-            int direction2 = 0;
-            direction2 += searchWordInDirection(pos-1, row+1, linearray, "MAS", 1, -1, "↗");
-            direction2 += searchWordInDirection(pos+1, row-1, linearray, "MAS", -1, 1, "↙");
-
-            if (direction1 == 1 && direction2 == 1) {
+            int found = 0;
+            found += searchWordInDirection(pos-1, row-1, linearray, searchP2,  1,  1, "↘");
+            found += searchWordInDirection(pos+1, row+1, linearray, searchP2, -1, -1, "↖");
+            found += searchWordInDirection(pos-1, row+1, linearray, searchP2,  1, -1, "↗");
+            found += searchWordInDirection(pos+1, row-1, linearray, searchP2, -1,  1, "↙");
+            if (found == 2) {
                 // Both elements of cross are present, so record it
                 sumP2++;
             }

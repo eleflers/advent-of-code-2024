@@ -38,3 +38,28 @@ cd day1/
 g++ day1.cc -Wall && ./a.out
 ```
 
+## General Helpers
+
+### Performance Metrics
+
+```bash
+time ./a.out
+perf stat ./a.out
+perf record ./a.out && perf report
+```
+
+### 7z
+
+Test data
+
+```bash
+7za l zip.7z # List
+7za x zip.7z # eXtract
+```
+
+# TODO
+
+- Learn how streams work
+    - E.g. to read 2 numbers in on day 1 challenge, could use `while(cin >> a >> b)`? How does this work
+- `std::multiset` could improve efficiency of the `count()` in day 1 part 2
+

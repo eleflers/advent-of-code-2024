@@ -33,9 +33,11 @@ At some point I will hopefully add a proper build chain (see goals outlined abov
 
 Until then, here is how to run `day1` for reference
 
+`c++2b` is C++23 standard
+
 ```bash
 cd day1/
-g++ day1.cc -Wall && ./a.out
+g++ day1.cc -std=c++2b -Wall && ./a.out
 ```
 
 ## General Helpers

@@ -34,6 +34,7 @@ int main(int argc, char* argv[])
 
     // Variables for output
     int sum = 0;
+    int sumP2 = 0;
 
     // Read file
     string line;
@@ -78,10 +79,6 @@ int main(int argc, char* argv[])
         pair<int,int> invalidIndices;
         bool validList = checkValidList(list, pageOrderPairs, invalidIndices);
 
-        // After looping all elements to check if they are left position pairs
-        // we know if it is a valid list or not
-        // Don't need to check for right values because any that occur we know do not
-        // have corresponding left values in our list or we would have processed them already
         if (validList) {
             // Add middle value to sum
             sum += list[(list.size()-1)/2];
@@ -89,27 +86,34 @@ int main(int argc, char* argv[])
         else {
             // Part 2: Fix invalid lists
             // Lets try a naive swap of the offending indices, and see if it converges
-            // Need to start check from the beginning since any 2 positions can be swapped even those
+            // Need to start check from the beginning each time since any 2 positions can be swapped even those
             // already checked
             int convergeLimit = 1000;
             int i = 0;
-            //while (!validList && i++ < convergeLimit) {
-            //    // Naive swap
-            //    int swap = list[invalidIndices.first];
-            //    list[invalidIndices.first] = list[invalidIndices.second];
-            //    list[invalidIndices.second] = swap;
-            //    // Send for rechecking as many times as needed
-            //    validList = checkValidList(list, pageOrderPairs, invalidIndices);
-            //}
-            //if (!validList && i >= convergeLimit) {
-            //    cout << "ERROR: Hit max sort attempts of " << convergeLimit << " for list " << endl;
-            //}
+            while (!validList && i++ < convergeLimit) {
+                // Naive swap
+                int swap = list[invalidIndices.first];
+                list[invalidIndices.first] = list[invalidIndices.second];
+                list[invalidIndices.second] = swap;
+                // Send for rechecking as many times as needed
+                validList = checkValidList(list, pageOrderPairs, invalidIndices);
+            }
+            // Either worked or we exhausted our tries after getting stuck in a loop
+            if (validList) {
+                // Part 2 sum, take middle number
+                sumP2 += list[(list.size()-1)/2];
+            }
+            else if (i >= convergeLimit) {
+                cout << "ERROR: Hit max swap attempts of " << convergeLimit << " for list" << endl;
+                return 1;
+            }
         }
     }
 
     // Output
     cout << "--\n";
-    cout << "Sum = " << sum << endl;
+    cout << "SumP1 = " << sum << endl;
+    cout << "SumP2 = " << sumP2 << endl;
 
     // Finished with input file
     input.close();
@@ -147,6 +151,10 @@ bool containsElement(vector<int> input, int search, int& pos)
 
 bool checkValidList(vector<int> list, unordered_multimap<int, int> pageOrderPairs, pair<int,int>& invalidIndices)
 {
+    // After looping all elements to check if they are left position pairs
+    // we know if it is a valid list or not
+    // Don't need to check for right values because any that occur we know do not
+    // have corresponding left values in our list or we would have processed them already
     bool validList = true;
     for (int leftpos = 0; validList && leftpos < list.size(); leftpos++) {
         int left = list[leftpos];
@@ -156,7 +164,7 @@ bool checkValidList(vector<int> list, unordered_multimap<int, int> pageOrderPair
             // Page is a key (leftside) in a pairing, loop over them
             auto range = pageOrderPairs.equal_range(left);
             for (auto it = range.first; it != range.second; it++) {
-                // Check to see if the 2nd of the pair is after the 1st
+                // Check to see if the 2nd of the pair is after the 1st in our list
                 int rightpos;
                 int right = it->second;
                 if (containsElement(list, right, rightpos)) {

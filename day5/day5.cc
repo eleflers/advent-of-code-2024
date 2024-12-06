@@ -9,6 +9,7 @@ using namespace std;
 
 vector<int> parseNumbers(string input, char delimiter);
 bool containsElement(vector<int> input, int search, int& pos);
+bool checkValidList(vector<int> list, unordered_multimap<int, int> pageOrderPairs, pair<int,int>& invalidIndices);
 
 int main(int argc, char* argv[])
 {
@@ -74,27 +75,9 @@ int main(int argc, char* argv[])
     // Process data
     for (auto list : pageUpdateLists) {
         // Inside 1 list of page no's
-        bool validList = true;
-        for (int leftpos = 0; validList && leftpos < list.size(); leftpos++) {
-            int left = list[leftpos];
-            // For 1 page no. in list
-            // Check to see if it is the 1st of any pairing
-            if (pageOrderPairs.contains(left)) {
-                // Page is a key (leftside) in a pairing, loop over them
-                auto range = pageOrderPairs.equal_range(left);
-                for (auto it = range.first; it != range.second; it++) {
-                    // Check to see if the 2nd of the pair is after the 1st
-                    int rightpos;
-                    int right = it->second;
-                    if (containsElement(list, right, rightpos)) {
-                        //cout << "For key " << left << " pos. " << leftpos << " in list found value " << right << " at pos. " << rightpos << endl;
-                        if (leftpos > rightpos) {
-                            validList = false;
-                        }
-                    }
-                }
-            }
-        }
+        pair<int,int> invalidIndices;
+        bool validList = checkValidList(list, pageOrderPairs, invalidIndices);
+
         // After looping all elements to check if they are left position pairs
         // we know if it is a valid list or not
         // Don't need to check for right values because any that occur we know do not
@@ -102,6 +85,25 @@ int main(int argc, char* argv[])
         if (validList) {
             // Add middle value to sum
             sum += list[(list.size()-1)/2];
+        }
+        else {
+            // Part 2: Fix invalid lists
+            // Lets try a naive swap of the offending indices, and see if it converges
+            // Need to start check from the beginning since any 2 positions can be swapped even those
+            // already checked
+            int convergeLimit = 1000;
+            int i = 0;
+            //while (!validList && i++ < convergeLimit) {
+            //    // Naive swap
+            //    int swap = list[invalidIndices.first];
+            //    list[invalidIndices.first] = list[invalidIndices.second];
+            //    list[invalidIndices.second] = swap;
+            //    // Send for rechecking as many times as needed
+            //    validList = checkValidList(list, pageOrderPairs, invalidIndices);
+            //}
+            //if (!validList && i >= convergeLimit) {
+            //    cout << "ERROR: Hit max sort attempts of " << convergeLimit << " for list " << endl;
+            //}
         }
     }
 
@@ -143,3 +145,30 @@ bool containsElement(vector<int> input, int search, int& pos)
     }
 }
 
+bool checkValidList(vector<int> list, unordered_multimap<int, int> pageOrderPairs, pair<int,int>& invalidIndices)
+{
+    bool validList = true;
+    for (int leftpos = 0; validList && leftpos < list.size(); leftpos++) {
+        int left = list[leftpos];
+        // For 1 page no. in list
+        // Check to see if it is the 1st of any pairing
+        if (pageOrderPairs.contains(left)) {
+            // Page is a key (leftside) in a pairing, loop over them
+            auto range = pageOrderPairs.equal_range(left);
+            for (auto it = range.first; it != range.second; it++) {
+                // Check to see if the 2nd of the pair is after the 1st
+                int rightpos;
+                int right = it->second;
+                if (containsElement(list, right, rightpos)) {
+                    //cout << "For key " << left << " pos. " << leftpos << " in list found value " << right << " at pos. " << rightpos << endl;
+                    if (leftpos > rightpos) {
+                        validList = false;
+                        invalidIndices.first = leftpos;
+                        invalidIndices.second = rightpos;
+                    }
+                }
+            }
+        }
+    }
+    return validList;
+}

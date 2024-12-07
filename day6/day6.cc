@@ -35,6 +35,8 @@ class Guard {
         bool atPossibleInfiniteLoop();
 };
 
+string getFileCoordinatesString(int x, int y);
+
 int main(int argc, char* argv[])
 {
     cout << "--\nAoC Day 6\n--\n";
@@ -131,7 +133,7 @@ int main(int argc, char* argv[])
                 guard.ypos = yNext;
                 steps++;
                 if (guard.atPossibleInfiniteLoop()) {
-                    cout << "Guard position [" << guard.xpos << "," << guard.ypos << "] (line:" << guard.ypos+1 << ",col:" << guard.xpos+1 << ") is a possible infinite loop point\n";
+                    //cout << "Guard position [" << guard.xpos << "," << guard.ypos << "] (line:" << guard.ypos+1 << ",col:" << guard.xpos+1 << ") is a possible infinite loop point\n";
                     infiniteLoopPoints++;
                 }
             }
@@ -293,7 +295,19 @@ bool Guard::atPossibleInfiniteLoop()
         case UP:
             // 1st vertex will be left of us and equal y
             if (firstX <= xpos && firstY == ypos) {
-                //cout << "Found infinite point passing vertex [" << firstX << "," << firstY << "] at guard position [" << xpos << "," << ypos << "] going UP\n";
+                cout << "Found infinite point passing vertex " << getFileCoordinatesString(firstX,firstY) << " at guard position " << getFileCoordinatesString(xpos,ypos) << " going UP\n";
+                // // Debug bring down everything at first loop
+                // cout << "There are " << vertexPoints.size() << " elements in the vertexPoints queue\n";
+                // cout << "Emptying it to find out what's going on!!\n";
+                // int i = 0;
+                // while (vertexPoints.size() > 0) {
+                //     firstVertex = vertexPoints.front();
+                //     firstX = firstVertex.first;
+                //     firstY = firstVertex.second;
+                //     vertexPoints.pop();
+                //     cout << "Item " << ++i << " in queue is co-ordinates " << getFileCoordinatesString(firstX, firstY) << " and it has been removed from the queue!\n";
+                // }
+                // throw std::runtime_error("Debug at first loop");
                 return true;
             }
             else {
@@ -303,7 +317,7 @@ bool Guard::atPossibleInfiniteLoop()
         case RIGHT:
             // 1st vertex will be higher and equal x
             if (firstX == xpos && firstY <= ypos) {
-                //cout << "Found infinite point passing vertex [" << firstX << "," << firstY << "] at guard position [" << xpos << "," << ypos << "] going RIGHT\n";
+                cout << "Found infinite point passing vertex " << getFileCoordinatesString(firstX,firstY) << " at guard position " << getFileCoordinatesString(xpos,ypos) << " going RIGHT\n";
                 return true;
             }
             else {
@@ -313,7 +327,7 @@ bool Guard::atPossibleInfiniteLoop()
         case DOWN:
             // 1st vertex will be right of us and equal y
             if (firstX >= xpos && firstY == ypos) {
-                //cout << "Found infinite point passing vertex [" << firstX << "," << firstY << "] at guard position [" << xpos << "," << ypos << "] going DOWN\n";
+                cout << "Found infinite point passing vertex " << getFileCoordinatesString(firstX,firstY) << " at guard position " << getFileCoordinatesString(xpos,ypos) << " going DOWN\n";
                 return true;
             }
             else {
@@ -323,7 +337,7 @@ bool Guard::atPossibleInfiniteLoop()
         case LEFT:
             // 1st vertex will be lower and equal x
             if (firstX == xpos && firstY >= ypos) {
-                //cout << "Found infinite point passing vertex [" << firstX << "," << firstY << "] at guard position [" << xpos << "," << ypos << "] going LEFT\n";
+                cout << "Found infinite point passing vertex " << getFileCoordinatesString(firstX,firstY) << " at guard position " << getFileCoordinatesString(xpos,ypos) << " going LEFT\n";
                 return true;
             }
             else {
@@ -335,5 +349,12 @@ bool Guard::atPossibleInfiniteLoop()
             break;
     }
 
+}
+
+string getFileCoordinatesString(int x, int y)
+{
+    ostringstream out;
+    out << "[" << x << "," << y << "] (l:" << y+1 << ",c:" << x+1 << ")";
+    return out.str();
 }
 

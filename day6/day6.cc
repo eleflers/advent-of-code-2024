@@ -18,12 +18,16 @@ class Lab {
         vector<string> grid;
         char getChar(int x, int y);
         char updateChar(int x, int y, char newval);
+        int getSizeX();
+        int getSizeY();
 };
 class Guard {
     public:
         int xpos;
         int ypos;
         enum Direction dir;
+        pair<int,int> getNextPos();
+        void turnRight();
 };
 
 int main(int argc, char* argv[])
@@ -32,7 +36,7 @@ int main(int argc, char* argv[])
     // For testing
     int debuglimit = 10;
     int debug = 0;
-    bool debugapply = true;
+    bool debugapply = false;
     if (debugapply) { cout << "DEBUG MODE : ON\nLINE LIMIT : " << debuglimit << "\n--" << endl; }
 
     // Read input args if any
@@ -63,7 +67,9 @@ int main(int argc, char* argv[])
             cout << "Line " << debug << ": " << line << endl;
         }
 
+        // Build vector
         lab.grid.push_back(line);
+        // Look for the guard's starting spot
         auto pos = line.find("^");
         if (pos != string::npos) {
             cout << "Found guard in starting position [" << pos << "," << lineNr << "]\n";
@@ -77,15 +83,60 @@ int main(int argc, char* argv[])
     input.close();
 
     // Processing
-    cout << "Lab object contains " << lab.grid.size() << " rows\n";
-    cout << "Guard obj. location [" << guard.xpos << "," << guard.ypos << "]\n";
-    cout << "Char at guard location before: " << lab.getChar(guard.xpos, guard.ypos) << endl;
-    lab.updateChar(guard.xpos, guard.ypos, 'X');
-    cout << "Guard location after: " << lab.getChar(guard.xpos, guard.ypos) << endl;
+    char marker = 'X';
+    lab.updateChar(guard.xpos, guard.ypos, marker);
+    sum++;
+    int steps = 0; int turns = 0;
+    bool escaped = false;
+    while (!escaped)
+    {
+        pair<int,int> nextPos = guard.getNextPos();
+        int xNext = nextPos.first;
+        int yNext = nextPos.second;
+        // Are we at the edge
+        if (xNext == -1 || xNext == lab.getSizeX()) {
+            // Escaped horizontally
+            escaped = true;
+        }
+        else if (yNext == -1 || yNext == lab.getSizeY()) {
+            // Escaped vertically
+            escaped = true;
+        }
+        else {
+            // Process next step
+            char nextChar = lab.getChar(xNext, yNext);
+            if (nextChar == '#') {
+                // Hit an obstacle, so turn right instead
+                guard.turnRight();
+                turns++;
+            }
+            else {
+                if (nextChar == marker) {
+                    // Already been to this spot
+                }
+                else {
+                    // Not been here before, mark it
+                    lab.updateChar(xNext, yNext, marker);
+                    sum++;
+                }
+                // Move guard
+                guard.xpos = xNext;
+                guard.ypos = yNext;
+                steps++;
+            }
+        }
+    }
+    cout << "Escaped after " << steps << " steps and " << turns << "turns!\n";
+    if (debugapply) {
+        cout << "Printing map..." << endl;
+        for (auto line : lab.grid) {
+            cout << line << endl;
+        }
+    }
 
     // Output
     cout << "--\n";
-    cout << "Sum = " << sum << endl;
+    cout << "Sum unique spots visited = " << sum << endl;
 
     cout << "--\nEnd.\n";
     return 0;
@@ -102,7 +153,7 @@ char Lab::getChar(int x, int y)
     if (x < 0 || x >= grid[0].length()) {
         ostringstream os;
         os << "Position [" << x << "," << y << "] is out of bounds, in x direction. (grid[0].length() = " << grid[0].length() << ")\n";
-        throw std::runtime_error(os.str()); // TODO: Make our own Exception class
+        throw std::runtime_error(os.str());
     }
     string line = grid[y];
     return line[x];
@@ -114,13 +165,77 @@ char Lab::updateChar(int x, int y, char newval)
     if (y < 0 || y >= grid.size()) {
         ostringstream os;
         os << "Position [" << x << "," << y << "] is out of bounds, in y direction. (grid.size() = " << grid.size() << ")\n";
-        throw std::runtime_error(os.str()); // TODO: Make our own Exception class
+        throw std::runtime_error(os.str());
     }
     if (x < 0 || x >= grid[0].length()) {
         ostringstream os;
         os << "Position [" << x << "," << y << "] is out of bounds, in x direction. (grid[0].length() = " << grid[0].length() << ")\n";
-        throw std::runtime_error(os.str()); // TODO: Make our own Exception class
+        throw std::runtime_error(os.str());
     }
     grid[y][x] = newval;
+}
+
+pair<int,int> Guard::getNextPos()
+{
+    // Be careful, y position actually increases as we go _down_ the lines!
+    pair<int,int> next;
+    switch (dir)
+    {
+        case UP:
+            next.first = xpos;
+            next.second = ypos - 1;
+            break;
+        case RIGHT:
+            next.first = xpos + 1;
+            next.second = ypos;
+            break;
+        case DOWN:
+            next.first = xpos;
+            next.second = ypos + 1;
+            break;
+        case LEFT:
+            next.first = xpos - 1;
+            next.second = ypos;
+            break;
+        default:
+            break;
+    }
+    return next;
+}
+
+int Lab::getSizeX()
+{
+    // Line width
+    return grid[0].length();
+}
+
+int Lab::getSizeY()
+{
+    // Line count
+    return grid.size();
+}
+
+void Guard::turnRight()
+{
+    // For some reason there's no easy way to simply +1 to an enum or cycle through it?
+    // Or even just get the digit value out
+    // Let's just use a switch statement instead...
+    switch (dir)
+    {
+        case UP:
+            dir = RIGHT;
+            break;
+        case RIGHT:
+            dir = DOWN;
+            break;
+        case DOWN:
+            dir = LEFT;
+            break;
+        case LEFT:
+            dir = UP;
+            break;
+        default:
+            break;
+    }
 }
 

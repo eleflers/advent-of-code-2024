@@ -84,8 +84,10 @@ int main(int argc, char* argv[])
 
     // Processing
     char marker = 'X';
+    // Log starting position before moving
     lab.updateChar(guard.xpos, guard.ypos, marker);
     sum++;
+    // Loop
     int steps = 0; int turns = 0;
     bool escaped = false;
     while (!escaped)
@@ -111,11 +113,8 @@ int main(int argc, char* argv[])
                 turns++;
             }
             else {
-                if (nextChar == marker) {
-                    // Already been to this spot
-                }
-                else {
-                    // Not been here before, mark it
+                if (nextChar != marker) {
+                    // Not been here before, mark and count it
                     lab.updateChar(xNext, yNext, marker);
                     sum++;
                 }
@@ -126,7 +125,7 @@ int main(int argc, char* argv[])
             }
         }
     }
-    cout << "Escaped after " << steps << " steps and " << turns << "turns!\n";
+    cout << "Escaped after " << steps << " steps and " << turns << " turns!\n";
     if (debugapply) {
         cout << "Printing map..." << endl;
         for (auto line : lab.grid) {

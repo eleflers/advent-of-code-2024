@@ -32,10 +32,10 @@ int main(int argc, char* argv[])
     // For testing
     int debuglimit = 10;
     int debug = 0;
-    bool debugapply = false;
+    bool debugapply = true;
     if (debugapply) { cout << "DEBUG MODE : ON\nLINE LIMIT : " << debuglimit << "\n--" << endl; }
 
-    // TODO: Add debug flag detection from CLI, and check whether file exists
+    // Read input args if any
     string filename = "input";
     if (argc == 1) {
         cout << "Assume default input file '" << filename << "'\n";
@@ -59,7 +59,8 @@ int main(int argc, char* argv[])
     {
         debug++;
         if (debugapply) {
-            //cout << line << endl;
+            cout << "Lab object contains " << lab.grid.size() << " rows\n";
+            cout << "Line " << debug << ": " << line << endl;
         }
 
         lab.grid.push_back(line);
@@ -76,8 +77,9 @@ int main(int argc, char* argv[])
     input.close();
 
     // Processing
-    cout << "";
-    cout << "Guard location before: " << lab.getChar(guard.xpos, guard.ypos) << endl;
+    cout << "Lab object contains " << lab.grid.size() << " rows\n";
+    cout << "Guard obj. location [" << guard.xpos << "," << guard.ypos << "]\n";
+    cout << "Char at guard location before: " << lab.getChar(guard.xpos, guard.ypos) << endl;
     lab.updateChar(guard.xpos, guard.ypos, 'X');
     cout << "Guard location after: " << lab.getChar(guard.xpos, guard.ypos) << endl;
 
@@ -92,14 +94,14 @@ int main(int argc, char* argv[])
 char Lab::getChar(int x, int y)
 {
     // Return char. at x,y pos. so we don't have to remember the vector<string> line structure
-    if (grid.size() >= y) {
+    if (y < 0 || y >= grid.size()) {
         ostringstream os;
-        os << "Position [" << x << "," << y << "] is out of bounds, in y direction";
+        os << "Position [" << x << "," << y << "] is out of bounds, in y direction. (grid.size() = " << grid.size() << ")\n";
         throw std::runtime_error(os.str()); // TODO: Make our own Exception class
     }
-    if (grid[0].length() >= x) {
+    if (x < 0 || x >= grid[0].length()) {
         ostringstream os;
-        os << "Position [" << x << "," << y << "] is out of bounds, in x direction";
+        os << "Position [" << x << "," << y << "] is out of bounds, in x direction. (grid[0].length() = " << grid[0].length() << ")\n";
         throw std::runtime_error(os.str()); // TODO: Make our own Exception class
     }
     string line = grid[y];
@@ -111,12 +113,12 @@ char Lab::updateChar(int x, int y, char newval)
     // Return char. at x,y pos. so we don't have to remember the vector<string> line structure
     if (y < 0 || y >= grid.size()) {
         ostringstream os;
-        os << "Position [" << x << "," << y << "] is out of bounds, in y direction";
+        os << "Position [" << x << "," << y << "] is out of bounds, in y direction. (grid.size() = " << grid.size() << ")\n";
         throw std::runtime_error(os.str()); // TODO: Make our own Exception class
     }
     if (x < 0 || x >= grid[0].length()) {
         ostringstream os;
-        os << "Position [" << x << "," << y << "] is out of bounds, in x direction";
+        os << "Position [" << x << "," << y << "] is out of bounds, in x direction. (grid[0].length() = " << grid[0].length() << ")\n";
         throw std::runtime_error(os.str()); // TODO: Make our own Exception class
     }
     grid[y][x] = newval;

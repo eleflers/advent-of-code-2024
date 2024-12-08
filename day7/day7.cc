@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
                     pos++;
                 }
                 //cout << "Parsed number " << n << endl;
-                num.emplace_back(stoi(n));
+                num.emplace_back(stoll(n));
             }
         }
         // Process

@@ -175,13 +175,16 @@ int main(int argc, char* argv[])
         int xPosNewObstacle = posNewObstacle.first;
         int yPosNewObstacle = posNewObstacle.second;
 
-        cout << "Simulating P2 guard " << p2Runs << "/" << potentialObstacles.size ()+ p2Runs;
-        cout << " with obstacle at " << getFileCoordinatesString(xPosNewObstacle, yPosNewObstacle) << "\n";
+        if (p2Runs % 100 == 0)
+        {
+            cout << "Simulating P2 guard " << p2Runs << "/" << potentialObstacles.size ()+ p2Runs;
+            cout << " with obstacle at " << getFileCoordinatesString(xPosNewObstacle, yPosNewObstacle) << "\n";
+        }
 
         // Guard is copied by function call so we can re-use it
         bool infiniteLoop = runGuardInfiniteLoopCheck(guardP2, lab, xPosNewObstacle, yPosNewObstacle);
         if (infiniteLoop) {
-            cout << "-- Guard " << p2Runs << " found an infinite loop! --\n";
+            //cout << "-- Guard " << p2Runs << " found an infinite loop! --\n";
             sumP2++;
         }
     }

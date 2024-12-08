@@ -14,7 +14,7 @@ int main(int argc, char* argv[])
     bool debugapply = true;
     if (debugapply) { cout << "DEBUG MODE : ON\nLINE LIMIT : " << debuglimit << "\n--" << endl; }
 
-    // TODO: Add debug flag detection from CLI, and check whether file exists
+    // User args
     string filename = "input";
     if (argc == 1) {
         cout << "Assume default input file '" << filename << "'\n";
@@ -29,21 +29,22 @@ int main(int argc, char* argv[])
     // Variables for output
     int sum = 0;
 
-    // Read file and get numbers
+    // Read file
     string line;
     while (getline(input, line) && (!debugapply || debug < debuglimit))
     {
         debug++;
-
-        cout << line << endl;
+        if (debugapply) {
+            cout << line << endl;
+        }
     }
+
+    // Finished with input file
+    input.close();
 
     // Output
     cout << "--\n";
     cout << "Sum = " << sum << endl;
-
-    // Finished with input file
-    input.close();
 
     cout << "--\nEnd.\n";
     return 0;

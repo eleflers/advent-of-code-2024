@@ -5,6 +5,7 @@
 #include <deque>
 #include <stack>
 #include <sstream>
+#include <math.h>
 
 using namespace std;
 
@@ -144,8 +145,13 @@ long long testEquations(stack<long long> numbers, long long result)
 
 long long combineNumbersAsStrings(long long a, long long b)
 {
-    ostringstream os;
-    os << a << b;
-    return stoll(os.str());
+    if (a < 0 || b < 0) {
+        throw runtime_error("Cannot handle negative numbers");
+    }
+    // Number a goes on front
+    // to add them together find out how many digits b has and multiply by 10^digits
+    // 76, 90 -> 76*10^2 + 90 = 7690
+    int digits = floor(log10(b)) + 1;
+    return (pow(10,digits)*a + b);
 }
 

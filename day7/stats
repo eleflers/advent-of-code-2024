@@ -1,0 +1,88 @@
+-- Recursive, deque:
+
+Sum = 4122618559853
+--
+End.
+
+ Performance counter stats for './a.out':
+
+            227.73 msec task-clock:u                     #    0.985 CPUs utilized
+                 0      context-switches:u               #    0.000 /sec
+                 0      cpu-migrations:u                 #    0.000 /sec
+               130      page-faults:u                    #  570.861 /sec
+       826,344,716      cycles:u                         #    3.629 GHz
+     1,148,068,353      instructions:u                   #    1.39  insn per cycle
+       171,237,227      branches:u                       #  751.943 M/sec
+           528,191      branch-misses:u                  #    0.31% of all branches
+
+       0.231189473 seconds time elapsed
+
+       0.222283000 seconds user
+       0.005108000 seconds sys
+
+-- Recursive, deque, part 2
+
+Sum = 227615740238334
+--
+End.
+
+ Performance counter stats for './a.out input':
+
+          6,438.38 msec task-clock:u                     #    0.997 CPUs utilized
+                 0      context-switches:u               #    0.000 /sec
+                 0      cpu-migrations:u                 #    0.000 /sec
+               133      page-faults:u                    #   20.657 /sec
+    24,701,559,910      cycles:u                         #    3.837 GHz
+    41,410,976,694      instructions:u                   #    1.68  insn per cycle
+     6,904,972,320      branches:u                       #    1.072 G/sec
+        18,851,319      branch-misses:u                  #    0.27% of all branches
+
+       6.454928541 seconds time elapsed
+
+       6.414536000 seconds user
+       0.003961000 seconds sys
+
+-- Stack
+
+Sum = 227615740238334
+--
+End.
+
+ Performance counter stats for './a.out input':
+
+          5,689.37 msec task-clock:u                     #    0.998 CPUs utilized
+                 0      context-switches:u               #    0.000 /sec
+                 0      cpu-migrations:u                 #    0.000 /sec
+               131      page-faults:u                    #   23.025 /sec
+    21,638,731,336      cycles:u                         #    3.803 GHz
+    39,682,221,347      instructions:u                   #    1.83  insn per cycle
+     6,567,054,271      branches:u                       #    1.154 G/sec
+        11,616,033      branch-misses:u                  #    0.18% of all branches
+
+       5.699413745 seconds time elapsed
+
+       5.611950000 seconds user
+       0.003846000 seconds sys
+
+-- Number joining, no string concat.
+
+Sum = 227615740238334
+--
+End.
+
+ Performance counter stats for './a.out input':
+
+          3,983.95 msec task-clock:u                     #    0.999 CPUs utilized
+                 0      context-switches:u               #    0.000 /sec
+                 0      cpu-migrations:u                 #    0.000 /sec
+               134      page-faults:u                    #   33.635 /sec
+    15,148,257,278      cycles:u                         #    3.802 GHz
+    24,602,513,320      instructions:u                   #    1.62  insn per cycle
+     3,585,755,807      branches:u                       #  900.051 M/sec
+         4,974,871      branch-misses:u                  #    0.14% of all branches
+
+       3.986867805 seconds time elapsed
+
+       3.967533000 seconds user
+       0.004880000 seconds sys
+

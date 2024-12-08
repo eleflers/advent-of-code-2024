@@ -32,13 +32,9 @@ class Guard {
         void move();
         // For part 2
         vector<pair<int,int>> infiniteLoopPoints;
-        bool atPossibleInfiniteLoop(Lab lab, char marker);
-        Direction getTravelDirectionOfPoint();
-        Direction getTravelDirectionOfPoint(int x, int y);
         void moveBackwards();
     private:
         unordered_map<string,Direction> travelDirections;
-        void setTravelDirectionOfPoint();
 };
 
 string getFileCoordinatesString(int x, int y);
@@ -144,13 +140,9 @@ int main(int argc, char* argv[])
                     // Log it for P2
                     potentialObstacles.push({xNext, yNext});
                 }
-                // Move guard, this also logs the previous location's direction of travel
+                // Move guard
                 guard.move();
                 steps++;
-                if (!newplace && guard.atPossibleInfiniteLoop(lab, marker)) {
-                    //cout << "Guard position " << getFileCoordinatesString(guard.xpos,guard.ypos) << " is an infinite loop point\n";
-                    infiniteLoopPoints++;
-                }
             }
         }
     }
@@ -274,9 +266,7 @@ int Lab::getSizeY()
 
 void Guard::move() {
 
-    // Before we move log the direction we moved on our previous spot for Part 2
-    setTravelDirectionOfPoint();
-    // Now move
+    // Update position
     pair<int,int> nextPos = getNextPos(1);
     xpos = nextPos.first;
     ypos = nextPos.second;
@@ -284,7 +274,7 @@ void Guard::move() {
 
 void Guard::moveBackwards() {
 
-    // For part 2
+    // For part 2, same as move but move -1 instead of 1 step in dir. we're facing
     pair<int,int> nextPos = getNextPos(-1);
     xpos = nextPos.first;
     ypos = nextPos.second;
@@ -314,112 +304,11 @@ void Guard::turnRight()
     }
 }
 
-bool Guard::atPossibleInfiniteLoop(Lab lab, char marker)
-{
-    //cout << "Checking previously travelled point " << getFileCoordinatesString(xpos, ypos) << " for infinite loop potential\n";
-    // Part 2 stuff:
-    // Every time we cross a point we have already been to it could be a possible loop point
-    // It depends on the direction we were travelling when we most recently crossed that point
-
-    // We been here before
-    Direction prevDirection = getTravelDirectionOfPoint();
-
-    // If we were previously travelling one right turn clockwise of our current
-    // direction of travel, we can turn again here and join an infinite loop of our past self
-    bool possible;
-    switch (prevDirection)
-    {
-        case UP:
-            possible = (dir == LEFT);
-            break;
-        case RIGHT:
-            possible = (dir == UP);
-            break;
-        case DOWN:
-            possible = (dir == RIGHT);
-            break;
-        case LEFT:
-            possible = (dir == DOWN);
-            break;
-        default:
-            possible = false;
-            break;
-    }
-
-    if (!possible) {
-        //cout << "Point " << getFileCoordinatesString(xpos, ypos) << " found false after direction check\n";
-        return false;
-    }
-
-    // We now know if we can make an infinite loop
-    // However the place we want to block may have already been taken by a past path
-    // or be out of bounds as we are on the edge of the map already
-    // So check this too
-    pair<int,int> blockingLoopPoint = getNextPos(1);
-    int xBlocking = blockingLoopPoint.first;
-    int yBlocking = blockingLoopPoint.second;
-    if (xBlocking == -1 || xBlocking == lab.getSizeX()) {
-        // Blocking point would be out of bounds
-        possible = false;
-    }
-    else if (yBlocking == -1 || yBlocking == lab.getSizeY()) {
-        // Blocking point would be out of bounds
-        possible = false;
-    }
-
-    if (!possible) {
-        //cout << "Requires point of obstacle " << getFileCoordinatesString(xBlocking, yBlocking) << " found false after out of bounds checks\n";
-        return false;
-    }
-    char nextChar = lab.getChar(xBlocking, yBlocking);
-    if (nextChar == marker) {
-        possible = false;
-        //cout << "Requires point of obstacle " << getFileCoordinatesString(xBlocking, yBlocking) << " found false as previously travelled\n";
-    }
-
-    return possible;
-}
-
 string getFileCoordinatesString(int x, int y)
 {
     ostringstream out;
     out << "[" << x << "," << y << "] (l:" << y+1 << ",c:" << x+1 << ")";
     return out.str();
-}
-
-// Log direction of travel for every point passed through for Part 2
-// If we pass through it again, depending on direction we travelled through it could
-// be the setup for an infinite loop
-void Guard::setTravelDirectionOfPoint()
-{
-    ostringstream os;
-    os << xpos << "x" << ypos;
-    string key = os.str();
-
-    // Set
-    travelDirections[key] = dir;
-}
-
-Direction Guard::getTravelDirectionOfPoint()
-{
-    return getTravelDirectionOfPoint(xpos, ypos);
-}
-
-Direction Guard::getTravelDirectionOfPoint(int x, int y)
-{
-    ostringstream os;
-    os << x << "x" << y;
-    string key = os.str();
-
-    if (!travelDirections.contains(key))
-    {
-        ostringstream err;
-        err << "Asked for key '" << key << "' that I do not have";
-        throw runtime_error(err.str());
-    }
-
-    // Get
-    return travelDirections[key];
 }
 
 bool runGuardInfiniteLoopCheck(Guard guard, Lab lab, int xPosObstacle, int yPosObstacle)
@@ -431,8 +320,6 @@ bool runGuardInfiniteLoopCheck(Guard guard, Lab lab, int xPosObstacle, int yPosO
     int xNext;
     int yNext;
     char nextChar;
-    char marker;
-    char notVisited = '.';
     unordered_map<string,int> obstacleHits;
     while (!escaped)
     {

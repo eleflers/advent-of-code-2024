@@ -3,10 +3,12 @@
 #include <algorithm>
 #include <vector>
 #include <deque>
+#include <sstream>
 
 using namespace std;
 
 long long testEquations(deque<long long> numbers, long long result);
+long long combineNumbersAsStrings(long long a, long long b);
 
 int main(int argc, char* argv[])
 {
@@ -89,7 +91,9 @@ long long testEquations(deque<long long> numbers, long long result)
     if (numbers.size() == 2) {
         //cout << "testEq called with 2 queue elements\n";
         long long first = numbers.front(); numbers.pop_front();
-        if (first + numbers.front() == result  || first * numbers.front() == result) {
+        if (first + numbers.front() == result 
+                    || first * numbers.front() == result
+                    || combineNumbersAsStrings(first, numbers.front()) == result) {
             return result;
         }
         else {
@@ -101,10 +105,14 @@ long long testEquations(deque<long long> numbers, long long result)
         long long second = numbers.front(); numbers.pop_front();
         //cout << "1: " << first << ", 2: " << second << ", 3: ?, calling recursively..." << endl;
         deque<long long> newQueue = {numbers};
+        deque<long long> newQueueP2 = {numbers};
         numbers.emplace_front(first + second);
         newQueue.emplace_front(first * second);
+        newQueueP2.emplace_front(combineNumbersAsStrings(first, second));
 
-        if (testEquations(numbers, result) == result || testEquations(newQueue, result) == result) {
+        if (testEquations(numbers, result) == result
+                    || testEquations(newQueue, result) == result
+                    || testEquations(newQueueP2, result) == result) {
             return result;
         }
         else {
@@ -123,5 +131,12 @@ long long testEquations(deque<long long> numbers, long long result)
     else {
         throw runtime_error("0 elements in the queue");
     }
+}
+
+long long combineNumbersAsStrings(long long a, long long b)
+{
+    ostringstream os;
+    os << a << b;
+    return stoll(os.str());
 }
 

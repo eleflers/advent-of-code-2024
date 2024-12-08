@@ -6,7 +6,7 @@
 
 using namespace std;
 
-int testEquations(deque<int> numbers, int result);
+long long testEquations(deque<long long> numbers, long long result);
 
 int main(int argc, char* argv[])
 {
@@ -30,11 +30,11 @@ int main(int argc, char* argv[])
     ifstream input(filename);
 
     // Variables for output
-    int sum = 0;
+    long long sum = 0;
 
     // Read file
     string line;
-    deque<int> num;
+    deque<long long> num;
     while (getline(input, line) && (!debugapply || debug < debuglimit))
     {
         debug++;
@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
 
         // Read result
         auto pos = line.find(":");
-        int result = stoi(line.substr(0,pos));
+        long long result = stoll(line.substr(0,pos));
         //cout << "Result: " << result << endl;
         // Loop rest of numbers
         while (pos != line.length()) {
@@ -69,7 +69,7 @@ int main(int argc, char* argv[])
         sum += testEquations(num, result);
 
         // Clear queue for next time
-        deque<int> empty;
+        deque<long long> empty;
         swap(num, empty);
     }
 
@@ -84,58 +84,44 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-int testEquations(deque<int> numbers, int result)
+long long testEquations(deque<long long> numbers, long long result)
 {
-    if (numbers.size() == 1) {
-        return numbers.front();
+    if (numbers.size() == 2) {
+        //cout << "testEq called with 2 queue elements\n";
+        long long first = numbers.front(); numbers.pop_front();
+        if (first + numbers.front() == result  || first * numbers.front() == result) {
+            return result;
+        }
+        else {
+            return 0;
+        }
     }
-    // else (numbers.size() > 1)
-    int first = numbers.front();
-    numbers.pop_front();
-    if ((first + testEquations(numbers, result)) == result || (first * testEquations(numbers, result)) == result) {
-        return result;
+    else if (numbers.size() > 2) {
+        long long first = numbers.front(); numbers.pop_front();
+        long long second = numbers.front(); numbers.pop_front();
+        //cout << "1: " << first << ", 2: " << second << ", 3: ?, calling recursively..." << endl;
+        deque<long long> newQueue = {numbers};
+        numbers.emplace_front(first + second);
+        newQueue.emplace_front(first * second);
+
+        if (testEquations(numbers, result) == result || testEquations(newQueue, result) == result) {
+            return result;
+        }
+        else {
+            return  0;
+        }
+    }
+    else if (numbers.size() == 1) {
+        // Maybe there is an odd special case where we are given 1 number
+        if (numbers.front() == result) {
+            return result;
+        }
+        else {
+            return 0;
+        }
     }
     else {
-        return 0;
+        throw runtime_error("0 elements in the queue");
     }
 }
-
-//int testEquations(deque<int> numbers, int result)
-//{
-//    if (numbers.size() == 2) {
-//        cout << "testEq called with 2 queue elements\n";
-//        int first = numbers.front(); numbers.pop_front();
-//        int second = numbers.front(); numbers.pop_front();
-//        cout << "1: " << first << ", 2: " << second << endl;
-//        if (first + second == result) {
-//            return result;
-//        }
-//        else if (first * second == result) {
-//            return result;
-//        }
-//        else {
-//            return 0;
-//        }
-//    }
-//    else if (numbers.size() > 2) {
-//        cout << "testEq called with " << numbers.size() << " queue elements\n";
-//        int first = numbers.front(); numbers.pop_front();
-//        int second = numbers.front(); numbers.pop_front();
-//        cout << "1: " << first << ", 2: " << second << ", 3: ?, calling recursively..." << endl;
-//        deque<int> newQueue = {numbers};
-//        numbers.emplace_front(first + second);
-//        newQueue.emplace_front(first * second);
-//
-//        // TODO: 0 could be a valid response though, could have
-//        //   12 = 0 + 6 * 2
-//        //   12 = 0 * 747 + 6 * 2
-//        // and so on...
-//        // but that should be fine since it won't resolve to actually 0 unless 0 is the intended result
-//        // after all the recursion?
-//        if (testEquations(numbers, result) != 0 || testEquations(newQueue, result) != 0) {
-//            return result;
-//            // Can't just return the sum because they could both be valid solutions, only need 1
-//        }
-//    }
-//}
 

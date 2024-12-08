@@ -18,7 +18,7 @@ class Lab {
     public:
         vector<string> grid;
         char getChar(int x, int y);
-        char updateChar(int x, int y, char newval);
+        void updateChar(int x, int y, char newval);
         int getSizeX();
         int getSizeY();
 };
@@ -29,10 +29,14 @@ class Guard {
         enum Direction dir;
         pair<int,int> getNextPos();
         void turnRight();
+        void move();
         // For part 2
-        queue<pair<int,int>> vertexPoints;
         vector<pair<int,int>> infiniteLoopPoints;
-        bool atPossibleInfiniteLoop();
+        bool atPossibleInfiniteLoop(Lab lab, char marker);
+    private:
+        unordered_map<string,Direction> travelDirections;
+        Direction getTravelDirectionOfPoint();
+        void setTravelDirectionOfPoint();
 };
 
 string getFileCoordinatesString(int x, int y);
@@ -95,8 +99,6 @@ int main(int argc, char* argv[])
     // Log starting position before moving
     lab.updateChar(guard.xpos, guard.ypos, marker);
     sum++;
-    // And for part 2, make our starting point the 1st vertex for our path (subsequently it will be turning points)
-    guard.vertexPoints.push({guard.xpos, guard.ypos});
     // Loop
     int steps = 0; int turns = 0;
     bool escaped = false;
@@ -123,17 +125,17 @@ int main(int argc, char* argv[])
                 turns++;
             }
             else {
-                if (nextChar != marker) {
-                    // Not been here before, mark and count it
-                    lab.updateChar(xNext, yNext, marker);
+                bool newplace = nextChar != marker;
+                if (newplace) {
+                    // Not been here before, count it
                     sum++;
+                    lab.updateChar(xNext, yNext, marker);
                 }
-                // Move guard
-                guard.xpos = xNext;
-                guard.ypos = yNext;
+                // Move guard, this also logs the previous location's direction of travel
+                guard.move();
                 steps++;
-                if (guard.atPossibleInfiniteLoop()) {
-                    //cout << "Guard position [" << guard.xpos << "," << guard.ypos << "] (line:" << guard.ypos+1 << ",col:" << guard.xpos+1 << ") is a possible infinite loop point\n";
+                if (!newplace && guard.atPossibleInfiniteLoop(lab, marker)) {
+                    cout << "Guard position " << getFileCoordinatesString(guard.xpos,guard.ypos) << " is an infinite loop point\n";
                     infiniteLoopPoints++;
                 }
             }
@@ -173,7 +175,7 @@ char Lab::getChar(int x, int y)
     return line[x];
 }
 
-char Lab::updateChar(int x, int y, char newval)
+void Lab::updateChar(int x, int y, char newval)
 {
     // Return char. at x,y pos. so we don't have to remember the vector<string> line structure
     if (y < 0 || y >= grid.size()) {
@@ -229,6 +231,16 @@ int Lab::getSizeY()
     return grid.size();
 }
 
+void Guard::move() {
+
+    // Before we move log the direction we moved on our previous spot for Part 2
+    setTravelDirectionOfPoint();
+    // Now move
+    pair<int,int> nextPos = getNextPos();
+    xpos = nextPos.first;
+    ypos = nextPos.second;
+}
+
 void Guard::turnRight()
 {
     // For some reason there's no easy way to simply +1 to an enum or cycle through it?
@@ -251,104 +263,72 @@ void Guard::turnRight()
         default:
             break;
     }
-
-    // Log for P2
-    vertexPoints.push({xpos, ypos});
 }
 
-bool Guard::atPossibleInfiniteLoop()
+bool Guard::atPossibleInfiniteLoop(Lab lab, char marker)
 {
-    // TODO: NOTE the place that may be the infinite loop blocker may not be allowed and should therefore be discounted,
-    // e.g. if out of bounds or has already been travelled in the past because that would alter our past route
-
+    cout << "Checking previously travelled point " << getFileCoordinatesString(xpos, ypos) << " for infinite loop potential\n";
     // Part 2 stuff:
-    // We know we're at a possible infinite loop position if we are at the vertex that completes the 4th side of a rectangle
-    // AND 'o' is a possible spot for an obstacle (not out of bounds or already previously visited)
-    // We won't get into this function if 'o' is out of bounds
-    // ...#.........
-    // ...2-->--3#..
-    // ...|.....|...
-    // ...^.....v...
-    // ...|.....|...
-    // <-o+--<--4...
-    // ...|.....#...
-    // ...1.........
-    // .............
+    // Every time we cross a point we have already been to it could be a possible loop point
+    // It depends on the direction we were travelling when we most recently crossed that point
 
-    // So we need at least 4 to check if we cross the path from the 1st to the 2nd. If so we can place another turn there
-    if (vertexPoints.size() < 4) {
-        return false;
-    }
-    // Any more and we can drop the oldest ones
-    while (vertexPoints.size() > 4) {
-        vertexPoints.pop();
-    }
-    // Now we have exactly 4 vertices in our past
-    // We only care about the oldest one as it is (1) in the diagram
-    pair<int,int> firstVertex = vertexPoints.front();
-    int firstX = firstVertex.first;
-    int firstY = firstVertex.second;
-    // Depends on the direction we're travelling
-    switch (dir)
+    // We been here before
+    Direction prevDirection = getTravelDirectionOfPoint();
+
+    // If we were previously travelling one right turn clockwise of our current
+    // direction of travel, we can turn again here and join an infinite loop of our past self
+    bool possible;
+    switch (prevDirection)
     {
-        // Remember y increases as we go down the file! So higher y means BELOW us
         case UP:
-            // 1st vertex will be left of us and equal y
-            if (firstX <= xpos && firstY == ypos) {
-                cout << "Found infinite point passing vertex " << getFileCoordinatesString(firstX,firstY) << " at guard position " << getFileCoordinatesString(xpos,ypos) << " going UP\n";
-                // // Debug bring down everything at first loop
-                // cout << "There are " << vertexPoints.size() << " elements in the vertexPoints queue\n";
-                // cout << "Emptying it to find out what's going on!!\n";
-                // int i = 0;
-                // while (vertexPoints.size() > 0) {
-                //     firstVertex = vertexPoints.front();
-                //     firstX = firstVertex.first;
-                //     firstY = firstVertex.second;
-                //     vertexPoints.pop();
-                //     cout << "Item " << ++i << " in queue is co-ordinates " << getFileCoordinatesString(firstX, firstY) << " and it has been removed from the queue!\n";
-                // }
-                // throw std::runtime_error("Debug at first loop");
-                return true;
-            }
-            else {
-                return false;
-            }
+            possible = (dir == LEFT);
             break;
         case RIGHT:
-            // 1st vertex will be higher and equal x
-            if (firstX == xpos && firstY <= ypos) {
-                cout << "Found infinite point passing vertex " << getFileCoordinatesString(firstX,firstY) << " at guard position " << getFileCoordinatesString(xpos,ypos) << " going RIGHT\n";
-                return true;
-            }
-            else {
-                return false;
-            }
+            possible = (dir == UP);
             break;
         case DOWN:
-            // 1st vertex will be right of us and equal y
-            if (firstX >= xpos && firstY == ypos) {
-                cout << "Found infinite point passing vertex " << getFileCoordinatesString(firstX,firstY) << " at guard position " << getFileCoordinatesString(xpos,ypos) << " going DOWN\n";
-                return true;
-            }
-            else {
-                return false;
-            }
+            possible = (dir == RIGHT);
             break;
         case LEFT:
-            // 1st vertex will be lower and equal x
-            if (firstX == xpos && firstY >= ypos) {
-                cout << "Found infinite point passing vertex " << getFileCoordinatesString(firstX,firstY) << " at guard position " << getFileCoordinatesString(xpos,ypos) << " going LEFT\n";
-                return true;
-            }
-            else {
-                return false;
-            }
+            possible = (dir == DOWN);
             break;
         default:
-            return false;
+            possible = false;
             break;
     }
 
+    if (!possible) {
+        cout << "Point " << getFileCoordinatesString(xpos, ypos) << " found false after direction check\n";
+        return false;
+    }
+
+    // We now know if we can make an infinite loop
+    // However the place we want to block may have already been taken by a past path
+    // or be out of bounds as we are on the edge of the map already
+    // So check this too
+    pair<int,int> blockingLoopPoint = getNextPos();
+    int xBlocking = blockingLoopPoint.first;
+    int yBlocking = blockingLoopPoint.second;
+    if (xBlocking == -1 || xBlocking == lab.getSizeX()) {
+        // Blocking point would be out of bounds
+        possible = false;
+    }
+    else if (yBlocking == -1 || yBlocking == lab.getSizeY()) {
+        // Blocking point would be out of bounds
+        possible = false;
+    }
+
+    if (!possible) {
+        cout << "Requires point of obstacle " << getFileCoordinatesString(xBlocking, yBlocking) << " found false after out of bounds checks\n";
+        return false;
+    }
+    char nextChar = lab.getChar(xBlocking, yBlocking);
+    if (nextChar == marker) {
+        possible = false;
+        cout << "Requires point of obstacle " << getFileCoordinatesString(xBlocking, yBlocking) << " found false as previously travelled\n";
+    }
+
+    return possible;
 }
 
 string getFileCoordinatesString(int x, int y)
@@ -358,3 +338,31 @@ string getFileCoordinatesString(int x, int y)
     return out.str();
 }
 
+// Log direction of travel for every point passed through for Part 2
+// If we pass through it again, depending on direction we travelled through it could
+// be the setup for an infinite loop
+void Guard::setTravelDirectionOfPoint()
+{
+    ostringstream os;
+    os << xpos << "x" << ypos;
+    string key = os.str();
+
+    // Set
+    travelDirections[key] = dir;
+}
+Direction Guard::getTravelDirectionOfPoint()
+{
+    ostringstream os;
+    os << xpos << "x" << ypos;
+    string key = os.str();
+
+    if (!travelDirections.contains(key))
+    {
+        ostringstream err;
+        err << "Asked for key '" << key << "' that I do not have";
+        throw runtime_error(err.str());
+    }
+
+    // Get
+    return travelDirections[key];
+}

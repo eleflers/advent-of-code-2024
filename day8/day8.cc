@@ -2,6 +2,7 @@
 #include <fstream>
 #include <algorithm>
 #include <vector>
+#include <set>
 
 using namespace std;
 
@@ -10,6 +11,7 @@ class Antenna {
         char frequency;
         int x;
         int y;
+        pair<int,int> getAntiNode(Antenna b);
 };
 
 class AntennaCollection {
@@ -48,6 +50,8 @@ int main(int argc, char* argv[])
     string line;
     int lineNr = 0;
     AntennaCollection ac;
+    bool first;
+    int maxX;
     while (getline(input, line) && (!debugapply || debug < debuglimit))
     {
         debug++;
@@ -74,6 +78,7 @@ int main(int argc, char* argv[])
             }
         }
         lineNr++;
+        maxX = line.length();
     }
 
     // Finished with input file
@@ -81,10 +86,33 @@ int main(int argc, char* argv[])
 
     // Processing
     auto nodes = ac.getAntinodes();
+    cout << "Found " << nodes.size() << " antinodes\n";
+    // Both these variables should still exist...
+    int maxY = lineNr;
+    unordered_map<int,set<int>> nodeXYPos;
+    vector<pair<int,int>> uniqueValidNodes;
+    for (auto n : nodes) {
+        // Check in bounds
+        int x = n.first;
+        int y = n.second;
+        if (x >= 0 && x < maxX && y >= 0 && y < maxY) {
+            // Valid placement, check for uniqueness
+            if (!nodeXYPos[x].contains(y)) {
+                nodeXYPos[x].insert(y);
+                uniqueValidNodes.push_back({x,y});
+            }
+            else {
+                cout << "Discarding duplicate node at pos " << x << "," << y << endl;
+            }
+        }
+        else {
+            cout << "Discarding node out of bounds at pos " << x << "," << y << " because maxX maxY is " << maxX << "," << maxY << endl;
+        }
+    }
 
     // Output
     cout << "--\n";
-    cout << "Found " << nodes.size() << " antinodes\n";
+    cout << "Found " << uniqueValidNodes.size() << " antinodes\n";
 
     cout << "--\nEnd.\n";
     return 0;
@@ -92,8 +120,27 @@ int main(int argc, char* argv[])
 
 vector<pair<int,int>> AntennaCollection::getAntinodes()
 {
-    cout << "Not implemented yet, but I have " << antennas.size() << " unique frequencies of antennas to report\n";
     vector<pair<int,int>> nodes;
+    cout << "Found " << antennas.size() << " unique frequencies of antennas\n";
+    for (auto it = antennas.begin(); it != antennas.end(); it++) {
+        // One frequency at a time in for loop
+        char f = it->first;
+        vector<Antenna> aVec = it->second;
+        cout << "Frequency '" << f << "' count " << aVec.size() << " antennas...\n";
+
+        // We need every pairing of antenna in the aVec for this freq.
+        // Not unique pairs because antinodes are generated in both directions
+        // We could easily make it unique by having j = i to start loop 2 but then
+        // the antinode function would need to find both antinodes instead of just 1 per pairing
+        for (int i = 0; i < aVec.size(); i++) {
+            for (int j = 0; j < aVec.size(); j++) {
+                if (i != j) {
+                    nodes.push_back(aVec[i].getAntiNode(aVec[j]));
+                }
+            }
+        }
+    }
+
     return nodes;
     //throw runtime_error("Not implemented");
 }
@@ -108,4 +155,15 @@ void AntennaCollection::addAntenna(Antenna a)
     // Add new antenna to element
     antennas[a.frequency].push_back(a);
 }
+
+// Get the coord. of the antinode produced by this Antenna in the direction of Antenna b
+pair<int,int> Antenna::getAntiNode(Antenna b)
+{
+    // This occurs at the same distance used travelling from a -> b, but again from antenna b
+    int deltaX = b.x - x;
+    int deltaY = b.y - y;
+    pair<int,int> p = {b.x + deltaX, b.y + deltaY};
+    return p;
+}
+
 

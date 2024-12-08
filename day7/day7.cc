@@ -3,11 +3,12 @@
 #include <algorithm>
 #include <vector>
 #include <deque>
+#include <stack>
 #include <sstream>
 
 using namespace std;
 
-long long testEquations(deque<long long> numbers, long long result);
+long long testEquations(stack<long long> numbers, long long result);
 long long combineNumbersAsStrings(long long a, long long b);
 
 int main(int argc, char* argv[])
@@ -37,6 +38,7 @@ int main(int argc, char* argv[])
     // Read file
     string line;
     deque<long long> num;
+    stack<long long> numStack;
     while (getline(input, line) && (!debugapply || debug < debuglimit))
     {
         debug++;
@@ -62,17 +64,24 @@ int main(int argc, char* argv[])
                     pos++;
                 }
                 //cout << "Parsed number " << n << endl;
-                num.emplace_back(stoll(n));
+                // Put on the front of the queue so the order is reversed, we will read it into
+                // a stack afterwards so the recursion is more efficient
+                num.emplace_front(stoll(n));
             }
+        }
+        // Reverse order back onto a stack so it comes off in correct order
+        while (!num.empty()) {
+            numStack.push(num.front());
+            num.pop_front();
         }
         // Process
         //cout << "Found " << num.size() << " numbers in line " << debug << " for result " << result << endl;
         // Try all possible operators ('+' and '*' for part 1)
-        sum += testEquations(num, result);
+        sum += testEquations(numStack, result);
 
         // Clear queue for next time
-        deque<long long> empty;
-        swap(num, empty);
+        stack<long long> empty;
+        swap(numStack, empty);
     }
 
     // Output
@@ -86,14 +95,14 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-long long testEquations(deque<long long> numbers, long long result)
+long long testEquations(stack<long long> numbers, long long result)
 {
     if (numbers.size() == 2) {
         //cout << "testEq called with 2 queue elements\n";
-        long long first = numbers.front(); numbers.pop_front();
-        if (first + numbers.front() == result 
-                    || first * numbers.front() == result
-                    || combineNumbersAsStrings(first, numbers.front()) == result) {
+        long long first = numbers.top(); numbers.pop();
+        if (first + numbers.top() == result 
+                    || first * numbers.top() == result
+                    || combineNumbersAsStrings(first, numbers.top()) == result) {
             return result;
         }
         else {
@@ -101,14 +110,14 @@ long long testEquations(deque<long long> numbers, long long result)
         }
     }
     else if (numbers.size() > 2) {
-        long long first = numbers.front(); numbers.pop_front();
-        long long second = numbers.front(); numbers.pop_front();
+        long long first = numbers.top(); numbers.pop();
+        long long second = numbers.top(); numbers.pop();
         //cout << "1: " << first << ", 2: " << second << ", 3: ?, calling recursively..." << endl;
-        deque<long long> newQueue = {numbers};
-        deque<long long> newQueueP2 = {numbers};
-        numbers.emplace_front(first + second);
-        newQueue.emplace_front(first * second);
-        newQueueP2.emplace_front(combineNumbersAsStrings(first, second));
+        stack<long long> newQueue = {numbers};
+        stack<long long> newQueueP2 = {numbers};
+        numbers.push(first + second);
+        newQueue.push(first * second);
+        newQueueP2.push(combineNumbersAsStrings(first, second));
 
         if (testEquations(numbers, result) == result
                     || testEquations(newQueue, result) == result
@@ -121,7 +130,7 @@ long long testEquations(deque<long long> numbers, long long result)
     }
     else if (numbers.size() == 1) {
         // Maybe there is an odd special case where we are given 1 number
-        if (numbers.front() == result) {
+        if (numbers.top() == result) {
             return result;
         }
         else {

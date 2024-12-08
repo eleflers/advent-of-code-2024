@@ -1,0 +1,80 @@
+== Correct answer: Sum P2 = 1618 ==
+
+-- Baseline:
+
+ Performance counter stats for './a.out input':
+
+         16,064.99 msec task-clock:u                     #    0.986 CPUs utilized
+                 0      context-switches:u               #    0.000 /sec    
+                 0      cpu-migrations:u                 #    0.000 /sec    
+             4,917      page-faults:u                    #  306.069 /sec    
+    55,161,371,455      cycles:u                         #    3.434 GHz     
+   110,412,799,007      instructions:u                   #    2.00  insn per cycle
+    20,519,911,823      branches:u                       #    1.277 G/sec   
+        46,700,940      branch-misses:u                  #    0.23% of all branches
+
+      16.288329968 seconds time elapsed
+
+      14.859318000 seconds user
+       0.948998000 seconds sys
+
+-- Remove print statements:
+
+ Performance counter stats for './a.out input':
+
+         14,612.57 msec task-clock:u                     #    0.998 CPUs utilized
+                 0      context-switches:u               #    0.000 /sec
+                 0      cpu-migrations:u                 #    0.000 /sec
+             4,889      page-faults:u                    #  334.575 /sec
+    55,435,942,849      cycles:u                         #    3.794 GHz
+   110,367,226,795      instructions:u                   #    1.99  insn per cycle
+    20,510,955,097      branches:u                       #    1.404 G/sec
+        46,212,851      branch-misses:u                  #    0.23% of all branches
+
+      14.646295985 seconds time elapsed
+
+      14.514091000 seconds user
+       0.039743000 seconds sys
+
+-- Remove redundant direction tracking from failed part 2
+
+ Performance counter stats for './a.out input':
+
+          3,483.01 msec task-clock:u                     #    0.998 CPUs utilized
+                 0      context-switches:u               #    0.000 /sec
+                 0      cpu-migrations:u                 #    0.000 /sec
+               147      page-faults:u                    #   42.205 /sec
+    13,192,973,352      cycles:u                         #    3.788 GHz
+    23,682,068,953      instructions:u                   #    1.80  insn per cycle
+     4,570,548,430      branches:u                       #    1.312 G/sec
+         6,959,309      branch-misses:u                  #    0.15% of all branches
+
+       3.489362149 seconds time elapsed
+
+       3.453721000 seconds user
+       0.015931000 seconds sys
+
+-- GuardP2 pre-seed placement
+
+--
+Sum unique spots visited = 4778
+Sum P2 = 1618
+--
+End.
+
+ Performance counter stats for './a.out input':
+
+          1,258.61 msec task-clock:u                     #    0.979 CPUs utilized
+                 0      context-switches:u               #    0.000 /sec
+                 0      cpu-migrations:u                 #    0.000 /sec
+               147      page-faults:u                    #  116.796 /sec
+     4,668,278,325      cycles:u                         #    3.709 GHz
+     8,536,544,245      instructions:u                   #    1.83  insn per cycle
+     1,651,846,018      branches:u                       #    1.312 G/sec
+         2,788,480      branch-misses:u                  #    0.17% of all branches
+
+       1.285678499 seconds time elapsed
+
+       1.239848000 seconds user
+       0.013058000 seconds sys
+

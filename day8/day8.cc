@@ -102,17 +102,17 @@ int main(int argc, char* argv[])
                 uniqueValidNodes.push_back({x,y});
             }
             else {
-                cout << "Discarding duplicate node at pos " << x << "," << y << endl;
+                //cout << "Discarding duplicate node at pos " << x << "," << y << endl;
             }
         }
         else {
-            cout << "Discarding node out of bounds at pos " << x << "," << y << " because maxX maxY is " << maxX << "," << maxY << endl;
+            //cout << "Discarding node out of bounds at pos " << x << "," << y << " because maxX maxY is " << maxX << "," << maxY << endl;
         }
     }
 
     // Output
     cout << "--\n";
-    cout << "Found " << uniqueValidNodes.size() << " antinodes\n";
+    cout << "Found " << uniqueValidNodes.size() << " unique antinodes in bounds\n";
 
     cout << "--\nEnd.\n";
     return 0;

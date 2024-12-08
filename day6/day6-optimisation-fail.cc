@@ -188,24 +188,25 @@ int main(int argc, char* argv[])
             guardP2.xpos = xPosNewObstacle;
             guardP2.ypos = yPosNewObstacle;
             // Direction is trickier, peek at the next obstacle because guard's starting dir. will be 1 right turn from that
+            // Maybe our logic was wrong though so just have him face it
             posNewObstacle = potentialObstacles.front();
             xPosNewObstacle = posNewObstacle.first;
             yPosNewObstacle = posNewObstacle.second;
             if (guardP2.xpos == xPosNewObstacle && guardP2.ypos < yPosNewObstacle) {
                 // Next obstacle below us, start left
-                guardP2.dir = LEFT;
+                guardP2.dir = DOWN;
             }
             else if (guardP2.xpos == xPosNewObstacle && guardP2.ypos > yPosNewObstacle) {
                 // Next obstacle above us, start right
-                guardP2.dir = RIGHT;
+                guardP2.dir = UP;
             }
             else if (guardP2.xpos < xPosNewObstacle && guardP2.ypos == yPosNewObstacle) {
                 // Next obstacle right of us, start down
-                guardP2.dir = DOWN;
+                guardP2.dir = RIGHT;
             }
             else if (guardP2.xpos > xPosNewObstacle && guardP2.ypos == yPosNewObstacle) {
                 // Next obstacle left of us, start up
-                guardP2.dir = UP;
+                guardP2.dir = LEFT;
             }
             else {
                 cout << "Guard P2 " << getFileCoordinatesString(guardP2.xpos, guard.ypos) << " but next obstacle " << getFileCoordinatesString(xPosNewObstacle, yPosNewObstacle) << endl;

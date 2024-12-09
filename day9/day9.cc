@@ -6,6 +6,23 @@
 
 using namespace std;
 
+class File {
+    public:
+        long long id;
+        long long startingPos;
+        long long length;
+};
+
+class FileSystem {
+    public:
+        vector<File> files;
+        long long startNextFile;
+        void addFile(long long id, long long length);
+        void addEmptySpace(long long length);
+        long long findNextEmptySpace(long long length);
+        void moveFile();
+};
+
 int main(int argc, char* argv[])
 {
     cout << "--\nAoC Day 9\n--\n";
@@ -50,6 +67,9 @@ int main(int argc, char* argv[])
     vector<long long> memory;
     long long spacesToFill = 0;
     int emptyVal = -1;
+    // P2 things
+    FileSystem fs;
+    fs.startNextFile = 0;
     while (getline(input, line) && (!debugapply || debug < debuglimit))
     {
         debug++;
@@ -72,6 +92,8 @@ int main(int argc, char* argv[])
             for (long long i = 0; i < len; i++) {
                 memory.push_back(id);
             }
+            // Filesystem for P2 also
+            fs.addFile(id, len);
             // Incremenent ID
             id++;
             //cout << "ID incremented to " << id << endl;
@@ -85,6 +107,7 @@ int main(int argc, char* argv[])
                     memory.push_back(emptyVal);
                     spacesToFill++;
                 }
+                fs.addEmptySpace(len);
                 pos++;
             }
         }
@@ -157,8 +180,7 @@ int main(int argc, char* argv[])
         }
         cout << endl;
     }
-
-    // Calculate 'checksum'
+    // P1: Calculate 'checksum'
     long long i = 0;
     for (auto x : memory) {
         // 'Checksum' = Positional index * value
@@ -167,11 +189,71 @@ int main(int argc, char* argv[])
         }
     }
 
+    // Processing P2
+    // This time we want to consider each file in its entirety, starting from the end
+    // and working backwards
+    // Only try to move a file once before moving on
+    // If there are no spaces large enough to accomodate it in its entirety it does not move
+    for (int i = fs.files.size() - 1; i >= 0; i--) {
+        // Run through backwards
+        //fs.files[i];
+        if (debugapply) {
+            cout << "Working on file " << i << ", id " << fs.files[i].id << ", len " << fs.files[i].length << "\n";
+        }
+        // Find first available space big enough
+        long long pos = fs.findNextEmptySpace(fs.files[i].length);
+        if (debugapply) {
+            cout << "First possible space large enough (if any) at pos " << pos << endl;
+        }
+        // Is it better than our current space? Update if so
+        if (pos != -1 && pos < fs.files[i].startingPos) {
+            if (debugapply) { cout << "Updating position: YES\n"; }
+            fs.files[i].startingPos = pos;
+        }
+        else {
+            if (debugapply) { cout << "Updating position: NO\n"; }
+        }
+    }
+    // TODO: Checksum P2
+
     // Output
     cout << "--\n";
     cout << "Checksum = " << sum << endl;
 
     cout << "--\nEnd.\n";
     return 0;
+}
+
+void FileSystem::addFile(long long id, long long length)
+{
+    File f;
+    f.startingPos = startNextFile;
+    f.length = length;
+    f.id = id;
+    files.push_back(f);
+    startNextFile += length;
+}
+
+void FileSystem::addEmptySpace(long long length) {
+    startNextFile += length;
+}
+
+long long FileSystem::findNextEmptySpace(long long length)
+{
+    // Special case, if the filesystem starts with a gap!
+    // ...0.11.2
+    if (files[0].startingPos >= length) {
+        return 0;
+    }
+
+    int endLastFile = files[0].startingPos + files[0].length;
+    for (auto f : files) {
+        int gap = f.startingPos - endLastFile;
+        if (gap >= length) {
+            return endLastFile;
+        }
+        endLastFile = f.startingPos + f.length;
+    }
+    return -1;
 }
 

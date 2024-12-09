@@ -24,7 +24,7 @@ class AntennaCollection {
 
 int main(int argc, char* argv[])
 {
-    cout << "--\nAoC Day 3\n--\n";
+    cout << "--\nAoC Day 8\n--\n";
     // For testing
     int debuglimit = 12;
     int debug = 0;
@@ -88,7 +88,6 @@ int main(int argc, char* argv[])
     int maxY = lineNr;
     auto nodes = ac.getAntinodes(maxX, maxY);
     cout << "Found " << nodes.size() << " antinodes\n";
-    // Both these variables should still exist...
     unordered_map<int,set<int>> nodeXYPos;
     vector<pair<int,int>> uniqueValidNodes;
     for (auto n : nodes) {
@@ -145,7 +144,6 @@ vector<pair<int,int>> AntennaCollection::getAntinodes(int maxX, int maxY)
     }
 
     return nodes;
-    //throw runtime_error("Not implemented");
 }
 
 void AntennaCollection::addAntenna(Antenna a)

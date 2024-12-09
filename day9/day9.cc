@@ -15,6 +15,7 @@ int main(int argc, char* argv[])
     bool debugapply = false;
 
     // Part 1: 6323378990915 - incorrect, too small
+    // Part 1: 6323641412437 - correct
 
     // User args
     string filename = "input";
@@ -111,31 +112,37 @@ int main(int argc, char* argv[])
     while (spacesToFill > 0) {
         // Peek at last ID
         long long last = memory.back();
-        //cout << "Last element = " << last << endl;
+        if (debugapply) { cout << "Last element = " << last << endl; }
         // Not interested in empty trailing memory, drop them all
         // Keep count though! These would have been counted in spacesToFill but are no longer needed for swaps
         // as nothing is behind them or was already moved ahead
         while (last == emptyVal) {
-            //cout << "Dropping extra empty space...";
+            if (debugapply) { cout << "Dropping extra empty space...\n"; }
             memory.pop_back();
             last = memory.back();
             spacesToFill--;
         }
-        // Now have value of last file ID to backfill
-        // Find first empty space to put it in
-        long long pos = 0;
-        while (memory[pos] != emptyVal) {
-            pos++;
+        if (spacesToFill == 0) {
+            // We must have just removed the last remaining empty space in the while loop
+            cout << "Dropped last empty space, no more gaps in data to fill, returning\n";
         }
-        //cout << "First empty space at index: " << pos << ", updating with value: " << last << endl;
-        memory[pos] = last;
-        memory.pop_back();
-        //cout << "Dropping last element...";
+        else {
+            // Now have value of last file ID to backfill
+            // Find first empty space to put it in
+            long long pos = 0;
+            while (memory[pos] != emptyVal) {
+                pos++;
+            }
+            if (debugapply) { cout << "First empty space at index: " << pos << ", updating with value: " << last << endl; }
+            memory[pos] = last;
+            memory.pop_back();
+            if (debugapply) { cout << "Dropping last element...\n"; }
 
-        spacesToFill--;
-        //cout << "There are " << spacesToFill << " remaining empty spaces to fill before the last element" << endl;
-        if (spacesToFill % 1000 == 0) {
-            cout << spacesToFill << " remaining spaces left for processing...\n";
+            spacesToFill--;
+            if (debugapply) { cout << "There are " << spacesToFill << " remaining empty spaces to fill before the last element" << endl; }
+            if (spacesToFill % 1000 == 0) {
+                cout << spacesToFill << " remaining spaces left for processing...\n";
+            }
         }
     }
     if (debugapply) {

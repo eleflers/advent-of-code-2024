@@ -11,14 +11,14 @@ class Antenna {
         char frequency;
         int x;
         int y;
-        pair<int,int> getAntiNode(Antenna b);
+        vector<pair<int,int>> getAntiNodes(Antenna b, int maxX, int maxY);
 };
 
 class AntennaCollection {
     private:
         unordered_map<char,vector<Antenna>> antennas;
     public:
-        vector<pair<int,int>> getAntinodes();
+        vector<pair<int,int>> getAntinodes(int maxX, int maxY);
         void addAntenna(Antenna a);
 };
 
@@ -85,10 +85,10 @@ int main(int argc, char* argv[])
     input.close();
 
     // Processing
-    auto nodes = ac.getAntinodes();
+    int maxY = lineNr;
+    auto nodes = ac.getAntinodes(maxX, maxY);
     cout << "Found " << nodes.size() << " antinodes\n";
     // Both these variables should still exist...
-    int maxY = lineNr;
     unordered_map<int,set<int>> nodeXYPos;
     vector<pair<int,int>> uniqueValidNodes;
     for (auto n : nodes) {
@@ -118,7 +118,7 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-vector<pair<int,int>> AntennaCollection::getAntinodes()
+vector<pair<int,int>> AntennaCollection::getAntinodes(int maxX, int maxY)
 {
     vector<pair<int,int>> nodes;
     cout << "Found " << antennas.size() << " unique frequencies of antennas\n";
@@ -135,7 +135,10 @@ vector<pair<int,int>> AntennaCollection::getAntinodes()
         for (int i = 0; i < aVec.size(); i++) {
             for (int j = 0; j < aVec.size(); j++) {
                 if (i != j) {
-                    nodes.push_back(aVec[i].getAntiNode(aVec[j]));
+                    vector<pair<int,int>> n = aVec[i].getAntiNodes(aVec[j], maxX, maxY);
+                    for (auto x : n) {
+                        nodes.push_back(x);
+                    }
                 }
             }
         }
@@ -157,13 +160,27 @@ void AntennaCollection::addAntenna(Antenna a)
 }
 
 // Get the coord. of the antinode produced by this Antenna in the direction of Antenna b
-pair<int,int> Antenna::getAntiNode(Antenna b)
+// As of Part 2 this is now multiple nodes repeating until we go out of bounds
+vector<pair<int,int>> Antenna::getAntiNodes(Antenna b, int maxX, int maxY)
 {
-    // This occurs at the same distance used travelling from a -> b, but again from antenna b
+    // P1: This occurs at the same distance used travelling from a -> b, but again from antenna b
+    // P2: However since Part2 this now starts at the position of b itself, and repeats as before until
+    // we go out of bounds
+    vector<pair<int,int>> an;
     int deltaX = b.x - x;
     int deltaY = b.y - y;
-    pair<int,int> p = {b.x + deltaX, b.y + deltaY};
-    return p;
+
+    // First antinode (an) pos. is just the pos. of Antenna b
+    int anx = b.x;
+    int any = b.y;
+    // Keep going as long as we are in bounds
+    while (anx >= 0 && anx < maxX && any >= 0 && any < maxY) {
+        an.push_back({anx, any});
+        // Next antinode
+        anx += deltaX;
+        any += deltaY;
+    }
+    return an;
 }
 
 

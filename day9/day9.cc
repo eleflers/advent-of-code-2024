@@ -165,7 +165,7 @@ int main(int argc, char* argv[])
 
             spacesToFill--;
             if (debugapply) { cout << "There are " << spacesToFill << " remaining empty spaces to fill before the last element" << endl; }
-            if (spacesToFill % 1000 == 0) {
+            if (spacesToFill % 1000 == 0 && spacesToFill != 0) {
                 cout << spacesToFill << " remaining spaces left for processing...\n";
             }
         }
@@ -203,6 +203,9 @@ int main(int argc, char* argv[])
     while (!fileStack.empty()) {
         File f = fileStack.top();
         fileStack.pop();
+        if (fileStack.size() % 1000 == 0 && fileStack.size() != 0) {
+            cout << "Computing possible file fragment moves, " << fileStack.size() << " files remaining...\n";
+        }
         // Run through backwards
         if (debugapply) {
             cout << "Working on file id " << f.id << ", len " << f.length << "\n";
@@ -262,28 +265,28 @@ long long FileSystem::findFirstEmptySpace(long long length, long long beforePos)
     int endPrevFile = files[0].startingPos + files[0].length;
     for (int i = 1; endPrevFile < beforePos && i < files.size(); i++) {
         int gap = files[i].startingPos - endPrevFile;
-        cout << "Previous file ended at " << endPrevFile << " and this file id " << files[i].id << " starts at " << files[i].startingPos << " leaving a gap of " << gap << " before this file\n";
+        //cout << "Previous file ended at " << endPrevFile << " and this file id " << files[i].id << " starts at " << files[i].startingPos << " leaving a gap of " << gap << " before this file\n";
         if (gap >= length) {
             return endPrevFile;
-            cout << "Gap found at pos. " << endPrevFile << endl;
+            //cout << "Gap found at pos. " << endPrevFile << endl;
         }
         endPrevFile = files[i].startingPos + files[i].length;
     }
-    cout << "No gap found, returning -1\n";
+    //cout << "No gap found, returning -1\n";
     return -1;
 }
     
 void FileSystem::moveFile(File f, long long newPos) {
     // Must find and erase file f from the file list
     // And insert it again at the new position
-    cout << "moveFile: Received move command, file id " << f.id << " to new filesystem pos " << newPos << endl;
+    //cout << "moveFile: Received move command, file id " << f.id << " to new filesystem pos " << newPos << endl;
     bool found = false;
     long long oldIndex;
     for (int i = files.size() - 1; !found && i >= 0; i--) {
         if (files[i].id == f.id) {
             found = true;
             oldIndex = i;
-            cout << "moveFile: found old vector index " << oldIndex << endl;
+            //cout << "moveFile: found old vector index " << oldIndex << endl;
         }
     }
     if (found) {
@@ -303,26 +306,23 @@ void FileSystem::moveFile(File f, long long newPos) {
         if (files[i].startingPos > newPos) {
             // It was the previous index
             newIndex = i;
-            cout << "Found insertion index for file at " << newIndex << endl;
-            cout << "== because newPos = " << newPos << " but file index " << i << " id " << files[i].id << " fs pos is " << files[i].startingPos << endl;
+            //cout << "Found insertion index for file at " << newIndex << endl;
+            //cout << "== because newPos = " << newPos << " but file index " << i << " id " << files[i].id << " fs pos is " << files[i].startingPos << endl;
             found = true;
         }
     }
     f.startingPos = newPos;
     files.insert(files.begin()+newIndex, f);
-    cout << "  Contents of files vector after move command\n";
-    for (auto f : files) {
-        cout << "    Vector element : file id " << f.id << endl;
-    }
+    //cout << "  Contents of files vector after move command\n";
+    //for (auto f : files) {
+    //    cout << "    Vector element : file id " << f.id << endl;
+    //}
 }
 
 long long File::checksum() {
     // Checksum is the ID multiplied by the position of each block on the filesystem
     // So if file ID 8 len 3 starts at pos 2 like so ..888..
     // We need to do 2*8 + 3*8 + 4*8
-    // id * (pos + (pos + 1) + (pos + 2))
-    // id * ((len * pos) + len)
-    // id * len * (pos + 1)
     int cksum = 0;
     for (int i = 0; i < length; i++) {
         cksum += id * (startingPos + i);

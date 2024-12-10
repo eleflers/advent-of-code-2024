@@ -21,8 +21,8 @@ class FileSystem {
         long long startNextFile;
         void addFile(long long id, long long length);
         void addEmptySpace(long long length);
-        long long findFirstEmptySpace(long long length, long long beforePos);
-        void moveFile(File f, long long newPos);
+        long long findFirstEmptyBlock(long long length, long long beforeBlockPos);
+        void moveFile(File f, long long newStartBlockPos);
 };
 
 int main(int argc, char* argv[])
@@ -197,6 +197,8 @@ int main(int argc, char* argv[])
     // Only try to move a file once before moving on
     // If there are no spaces large enough to accomodate it in its entirety it does not move
     stack<File> fileStack;
+    // Duplicate into a stack just so we can easily go backwards over each file exactly once
+    // Even if we're moving them around in the actual FileSystem obj.
     for (auto f : fs.files) {
         fileStack.push(f);
     }
@@ -211,14 +213,14 @@ int main(int argc, char* argv[])
             cout << "Working on file id " << f.id << ", len " << f.length << "\n";
         }
         // Find first available space big enough
-        long long pos = fs.findFirstEmptySpace(f.length, f.startingPos);
+        long long blockPos = fs.findFirstEmptyBlock(f.length, f.startingPos);
         if (debugapply) {
-            cout << "First possible space large enough (if any) at pos " << pos << endl;
+            cout << "First possible space large enough (if any) at pos " << blockPos << endl;
         }
         // Is it better than our current space? Update if so
-        if (pos != -1 && pos < f.startingPos) {
+        if (blockPos != -1 && blockPos < f.startingPos) {
             if (debugapply) { cout << "Updating position: YES\n"; }
-            fs.moveFile(f, pos);
+            fs.moveFile(f, blockPos);
         }
         else {
             if (debugapply) { cout << "Updating position: NO\n"; }
@@ -253,7 +255,7 @@ void FileSystem::addEmptySpace(long long length) {
     startNextFile += length;
 }
 
-long long FileSystem::findFirstEmptySpace(long long length, long long beforePos)
+long long FileSystem::findFirstEmptyBlock(long long length, long long beforeBlockPos)
 {
     // Special case, if the filesystem starts with a gap!
     // ...0.11.2
@@ -263,7 +265,7 @@ long long FileSystem::findFirstEmptySpace(long long length, long long beforePos)
     }
 
     int endPrevFile = files[0].startingPos + files[0].length;
-    for (int i = 1; endPrevFile < beforePos && i < files.size(); i++) {
+    for (int i = 1; endPrevFile < beforeBlockPos && i < files.size(); i++) {
         int gap = files[i].startingPos - endPrevFile;
         //cout << "Previous file ended at " << endPrevFile << " and this file id " << files[i].id << " starts at " << files[i].startingPos << " leaving a gap of " << gap << " before this file\n";
         if (gap >= length) {
@@ -276,9 +278,10 @@ long long FileSystem::findFirstEmptySpace(long long length, long long beforePos)
     return -1;
 }
     
-void FileSystem::moveFile(File f, long long newPos) {
+void FileSystem::moveFile(File f, long long newStartBlockPos) {
     // Must find and erase file f from the file list
     // And insert it again at the new position
+    // Be careful not to mix up block positions and filesystem index positions
     //cout << "moveFile: Received move command, file id " << f.id << " to new filesystem pos " << newPos << endl;
     bool found = false;
     long long oldIndex;
@@ -303,15 +306,16 @@ void FileSystem::moveFile(File f, long long newPos) {
     long long newIndex;
     found = false;
     for (int i = 0; !found && i < files.size(); i++) {
-        if (files[i].startingPos > newPos) {
-            // It was the previous index
+        if (files[i].startingPos > newStartBlockPos) {
+            // The moved file needs to displace this one in the list,
+            // i.e. be inserted at this index
             newIndex = i;
             //cout << "Found insertion index for file at " << newIndex << endl;
             //cout << "== because newPos = " << newPos << " but file index " << i << " id " << files[i].id << " fs pos is " << files[i].startingPos << endl;
             found = true;
         }
     }
-    f.startingPos = newPos;
+    f.startingPos = newStartBlockPos;
     files.insert(files.begin()+newIndex, f);
     //cout << "  Contents of files vector after move command\n";
     //for (auto f : files) {

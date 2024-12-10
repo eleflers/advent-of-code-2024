@@ -27,6 +27,8 @@ class FileSystem {
         void moveFile(File f, long long newStartBlockPos);
 };
 
+long long processFileSystem(FileSystem fs, bool debugapply);
+
 int main(int argc, char* argv[])
 {
     cout << "--\nAoC Day 9\n--\n";
@@ -91,7 +93,7 @@ int main(int argc, char* argv[])
         long long id = 0; // ID of file starting at 0, incrementing
         while (pos < line.length()) {
             // Read file length
-            len = stol(line.substr(pos,1));
+            len = stoll(line.substr(pos,1));
             // Add file 'ID' to memory 'len' times
             for (long long i = 0; i < len; i++) {
                 // Use P2 code to solve P1 also, just add 'len' files of length 1 instead of 1 file length 'len'
@@ -106,7 +108,7 @@ int main(int argc, char* argv[])
             
             // Read free space
             if (pos < line.length()) {
-                len = stoi(line.substr(pos,1));
+                len = stoll(line.substr(pos,1));
                 // Add free space '.' 'len' times
                 fsP1.addEmptySpace(len);
                 fsP2.addEmptySpace(len);
@@ -124,105 +126,10 @@ int main(int argc, char* argv[])
     // Only try to move a file once before moving on
     // Duplicate into a stack just so we can easily go backwards over each file exactly once
     // Even if we're moving them around in the actual FileSystem obj.
-    int remaining = fsP1.files.size();
-    // Convoluted way to get a stack of positions to go through in reverse
-    // since apparently maps aren't sorted
-    vector<long long> vec1;
-    stack<long long> posStack1;
-    for (auto iter = fsP1.files.begin(); iter != fsP1.files.end(); iter++) {
-        vec1.push_back(iter->first);
-    }
-    sort(vec1.begin(), vec1.end());
-    for (auto v : vec1) {
-        posStack1.push(v);
-    }
-    while (posStack1.size() > 0) {
-        long long pos = posStack1.top();
-        posStack1.pop();
-        File f = fsP1.files[pos];
-        if (remaining % 1000 == 0 && remaining != 0) {
-            cout << "Computing possible file fragment moves, " << remaining << " files remaining...\n";
-        }
-        remaining--;
-        // Run through backwards
-        if (debugapply) {
-            cout << "Working on file id " << f.id << ", len " << f.length << "\n";
-        }
-        // Find first available space big enough
-        long long blockPos = fsP1.findFirstEmptyBlock(f.length, f.startingPos);
-        if (debugapply) {
-            cout << "First possible space large enough (if any) at pos " << blockPos << endl;
-        }
-        // Is it better than our current space? Update if so
-        if (blockPos != -1 && blockPos < f.startingPos) {
-            if (debugapply) { cout << "Updating position: YES\n"; }
-            fsP1.moveFile(f, blockPos);
-        }
-        else {
-            if (debugapply) { cout << "Updating position: NO\n"; }
-        }
-    }
-    // Checksum P1
-    long long sumP1 = 0;
-    for (auto f : fsP1.files) {
-        sumP1 += f.second.checksum();
-    }
+    long long sumP1 = processFileSystem(fsP1, debugapply);
 
     cout << "== Part 2 ==\n";
-
-    // Processing P2
-    // This time we want to consider each file in its entirety, starting from the end
-    // and working backwards
-    // Only try to move a file once before moving on
-    // If there are no spaces large enough to accomodate it in its entirety it does not move
-    // Duplicate into a stack just so we can easily go backwards over each file exactly once
-    // Even if we're moving them around in the actual FileSystem obj.
-    remaining = fsP2.files.size();
-    // Convoluted way to get a stack of positions to go through in reverse
-    // since apparently maps aren't sorted
-    vector<long long> vec2;
-    stack<long long> posStack2;
-    for (auto iter = fsP2.files.begin(); iter != fsP2.files.end(); iter++) {
-        vec2.push_back(iter->first);
-    }
-    sort(vec2.begin(), vec2.end());
-    for (auto v : vec2) {
-        posStack1.push(v);
-    }
-    for (auto iter = fsP2.files.begin(); iter != fsP2.files.end(); iter++) {
-        posStack2.push(iter->first);
-    }
-    while (posStack2.size() > 0) {
-        long long pos = posStack2.top();
-        posStack2.pop();
-        File f = fsP2.files[pos];
-        if (remaining % 1000 == 0 && remaining != 0) {
-            cout << "Computing possible file fragment moves, " << remaining << " files remaining...\n";
-        }
-        remaining--;
-        // Run through backwards
-        if (debugapply) {
-            cout << "Working on file id " << f.id << ", len " << f.length << "\n";
-        }
-        // Find first available space big enough
-        long long blockPos = fsP2.findFirstEmptyBlock(f.length, f.startingPos);
-        if (debugapply) {
-            cout << "First possible space large enough (if any) at pos " << blockPos << endl;
-        }
-        // Is it better than our current space? Update if so
-        if (blockPos != -1 && blockPos < f.startingPos) {
-            if (debugapply) { cout << "Updating position: YES\n"; }
-            fsP2.moveFile(f, blockPos);
-        }
-        else {
-            if (debugapply) { cout << "Updating position: NO\n"; }
-        }
-    }
-    // Checksum P2
-    long long sumP2 = 0;
-    for (auto f : fsP2.files) {
-        sumP2 += f.second.checksum();
-    }
+    long long sumP2 = processFileSystem(fsP2, debugapply);
 
     // Output
     cout << "--\n";
@@ -298,5 +205,52 @@ long long File::checksum() {
         cksum += id * (startingPos + i);
     }
     return cksum;
+}
+
+long long processFileSystem(FileSystem fs, bool debugapply) {
+    int remaining = fs.files.size();
+    // Convoluted way to get a stack of positions to go through in reverse
+    // since apparently maps aren't sorted
+    vector<long long> vec;
+    stack<long long> posStack;
+    for (auto iter = fs.files.begin(); iter != fs.files.end(); iter++) {
+        vec.push_back(iter->first);
+    }
+    sort(vec.begin(), vec.end());
+    for (auto v : vec) {
+        posStack.push(v);
+    }
+    while (posStack.size() > 0) {
+        long long pos = posStack.top();
+        posStack.pop();
+        File f = fs.files[pos];
+        if (remaining % 1000 == 0 && remaining != 0) {
+            cout << "Computing possible file fragment moves, " << remaining << " files remaining...\n";
+        }
+        remaining--;
+        // Run through backwards
+        if (debugapply) {
+            cout << "Working on file id " << f.id << ", len " << f.length << "\n";
+        }
+        // Find first available space big enough
+        long long blockPos = fs.findFirstEmptyBlock(f.length, f.startingPos);
+        if (debugapply) {
+            cout << "First possible space large enough (if any) at pos " << blockPos << endl;
+        }
+        // Is it better than our current space? Update if so
+        if (blockPos != -1 && blockPos < f.startingPos) {
+            if (debugapply) { cout << "Updating position: YES\n"; }
+            fs.moveFile(f, blockPos);
+        }
+        else {
+            if (debugapply) { cout << "Updating position: NO\n"; }
+        }
+    }
+    // Checksum
+    long long sum = 0;
+    for (auto f : fs.files) {
+        sum += f.second.checksum();
+    }
+    return sum;
 }
 

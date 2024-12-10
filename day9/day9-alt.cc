@@ -125,8 +125,21 @@ int main(int argc, char* argv[])
     // Duplicate into a stack just so we can easily go backwards over each file exactly once
     // Even if we're moving them around in the actual FileSystem obj.
     int remaining = fsP1.files.size();
-    for (auto iter = fsP1.files.rbegin(); iter != fsP1.files.rend(); iter++) {
-        File f = iter->second;
+    // Convoluted way to get a stack of positions to go through in reverse
+    // since apparently maps aren't sorted
+    vector<long long> vec1;
+    stack<long long> posStack1;
+    for (auto iter = fsP1.files.begin(); iter != fsP1.files.end(); iter++) {
+        vec1.push_back(iter->first);
+    }
+    sort(vec1.begin(), vec1.end());
+    for (auto v : vec1) {
+        posStack1.push(v);
+    }
+    while (posStack1.size() > 0) {
+        long long pos = posStack1.top();
+        posStack1.pop();
+        File f = fsP1.files[pos];
         if (remaining % 1000 == 0 && remaining != 0) {
             cout << "Computing possible file fragment moves, " << remaining << " files remaining...\n";
         }
@@ -165,8 +178,24 @@ int main(int argc, char* argv[])
     // Duplicate into a stack just so we can easily go backwards over each file exactly once
     // Even if we're moving them around in the actual FileSystem obj.
     remaining = fsP2.files.size();
-    for (auto iter = fsP2.files.rbegin(); iter != fsP2.files.rend(); iter++) {
-        File f = iter->second;
+    // Convoluted way to get a stack of positions to go through in reverse
+    // since apparently maps aren't sorted
+    vector<long long> vec2;
+    stack<long long> posStack2;
+    for (auto iter = fsP2.files.begin(); iter != fsP2.files.end(); iter++) {
+        vec2.push_back(iter->first);
+    }
+    sort(vec2.begin(), vec2.end());
+    for (auto v : vec2) {
+        posStack1.push(v);
+    }
+    for (auto iter = fsP2.files.begin(); iter != fsP2.files.end(); iter++) {
+        posStack2.push(iter->first);
+    }
+    while (posStack2.size() > 0) {
+        long long pos = posStack2.top();
+        posStack2.pop();
+        File f = fsP2.files[pos];
         if (remaining % 1000 == 0 && remaining != 0) {
             cout << "Computing possible file fragment moves, " << remaining << " files remaining...\n";
         }

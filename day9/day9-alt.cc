@@ -24,7 +24,7 @@ class FileSystem {
         void addFile(long long id, long long length);
         void addEmptySpace(long long length);
         long long findFirstEmptyBlock(long long length, long long beforeBlockPos);
-        void moveFile(File f, long long newStartBlockPos);
+        void moveFile(File f, long long newStartBlockPos, bool debugprints);
 };
 
 long long processFileSystem(FileSystem fs, bool debugapply);
@@ -172,9 +172,11 @@ long long FileSystem::findFirstEmptyBlock(long long length, long long beforeBloc
     return -1;
 }
     
-void FileSystem::moveFile(File f, long long newStartBlockPos) {
+void FileSystem::moveFile(File f, long long newStartBlockPos, bool debugprints) {
     // Be careful not to mix up block positions and filesystem index positions
-    //cout << "moveFile: Received move command, file id " << f.id << " to new filesystem pos " << newPos << endl;
+    if (debugprints) {
+        cout << "moveFile: Received move command, file id " << f.id << " from filesystem pos " << f.startingPos << " to " << newStartBlockPos << endl;
+    }
 
     // Update location
     long long oldStartingPos = f.startingPos;
@@ -190,10 +192,12 @@ void FileSystem::moveFile(File f, long long newStartBlockPos) {
         gaps[oldStartingPos + f.length] = gapLength - f.length;
     }
 
-    //cout << "  Contents of files vector after move command\n";
-    //for (auto f : files) {
-    //    cout << "    Vector element : file id " << f.id << endl;
-    //}
+    if (debugprints) {
+        cout << "  Contents of gaps map after move command:\n";
+        for (auto it = gaps.begin(); it != gaps.end(); it++) {
+            cout << "    Gap pos. " << it->first << " length " << it->second << endl;
+        }
+    }
 }
 
 long long File::checksum() {
@@ -240,7 +244,7 @@ long long processFileSystem(FileSystem fs, bool debugapply) {
         // Is it better than our current space? Update if so
         if (blockPos != -1 && blockPos < f.startingPos) {
             if (debugapply) { cout << "Updating position: YES\n"; }
-            fs.moveFile(f, blockPos);
+            fs.moveFile(f, blockPos, debugapply);
         }
         else {
             if (debugapply) { cout << "Updating position: NO\n"; }

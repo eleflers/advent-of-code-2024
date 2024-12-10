@@ -62,16 +62,16 @@ int main(int argc, char* argv[])
     ifstream input(filename);
 
     // Variables for output
-    long long sum = 0;
+    //long long sum = 0;
 
     // Read file
     string line;
-    vector<long long> memory;
-    long long spacesToFill = 0;
     int emptyVal = -1;
-    // P2 things
-    FileSystem fs;
-    fs.startNextFile = 0;
+    // Object approach
+    FileSystem fsP1;
+    fsP1.startNextFile = 0;
+    FileSystem fsP2;
+    fsP2.startNextFile = 0;
     while (getline(input, line) && (!debugapply || debug < debuglimit))
     {
         debug++;
@@ -92,10 +92,11 @@ int main(int argc, char* argv[])
             len = stol(line.substr(pos,1));
             // Add file 'ID' to memory 'len' times
             for (long long i = 0; i < len; i++) {
-                memory.push_back(id);
+                // Use P2 code to solve P1 also, just add 'len' files of length 1 instead of 1 file length 'len'
+                fsP1.addFile(id, 1);
             }
-            // Filesystem for P2 also
-            fs.addFile(id, len);
+            // Filesystem for P2 also, single file length 'len'
+            fsP2.addFile(id, len);
             // Incremenent ID
             id++;
             //cout << "ID incremented to " << id << endl;
@@ -105,91 +106,57 @@ int main(int argc, char* argv[])
             if (pos < line.length()) {
                 len = stoi(line.substr(pos,1));
                 // Add free space '.' 'len' times
-                for (long long i = 0; i < len; i++) {
-                    memory.push_back(emptyVal);
-                    spacesToFill++;
-                }
-                fs.addEmptySpace(len);
+                fsP1.addEmptySpace(len);
+                fsP2.addEmptySpace(len);
                 pos++;
             }
-        }
-        if (debugapply) {
-            cout << "Resulting memory:\n";
-            for (long long x : memory) {
-                if (x == emptyVal) {
-                    cout << " . ";
-                }
-                else {
-                    cout << "{" << x << "}";
-                }
-            }
-            cout << endl;
         }
     }
     // Finished with input file
     input.close();
 
-    // Processing
-    // Kept count of how many free space gaps we have to fill
-    // Iterate over those, and take file from back of string and put in first available space
-    // until no more spaces
-    // Now we can start processing while keeping track of what we drop
-    while (spacesToFill > 0) {
-        // Peek at last ID
-        long long last = memory.back();
-        if (debugapply) { cout << "Last element = " << last << endl; }
-        // Not interested in empty trailing memory, drop them all
-        // Keep count though! These would have been counted in spacesToFill but are no longer needed for swaps
-        // as nothing is behind them or was already moved ahead
-        while (last == emptyVal) {
-            if (debugapply) { cout << "Dropping extra empty space...\n"; }
-            memory.pop_back();
-            last = memory.back();
-            spacesToFill--;
+    cout << "== Part 1 ==\n";
+
+    // Processing P1
+    // Refactored to use same code as P2, each file is just broken up into files of blocklength 1 with the same ID
+    // Only try to move a file once before moving on
+    stack<File> fileStackP1;
+    // Duplicate into a stack just so we can easily go backwards over each file exactly once
+    // Even if we're moving them around in the actual FileSystem obj.
+    for (auto f : fsP1.files) {
+        fileStackP1.push(f);
+    }
+    while (!fileStackP1.empty()) {
+        File f = fileStackP1.top();
+        fileStackP1.pop();
+        if (fileStackP1.size() % 1000 == 0 && fileStackP1.size() != 0) {
+            cout << "Computing possible file fragment moves, " << fileStackP1.size() << " files remaining...\n";
         }
-        if (spacesToFill == 0) {
-            // We must have just removed the last remaining empty space in the while loop
-            cout << "Dropped last empty space, no more gaps in data to fill, returning\n";
+        // Run through backwards
+        if (debugapply) {
+            cout << "Working on file id " << f.id << ", len " << f.length << "\n";
+        }
+        // Find first available space big enough
+        long long blockPos = fsP1.findFirstEmptyBlock(f.length, f.startingPos);
+        if (debugapply) {
+            cout << "First possible space large enough (if any) at pos " << blockPos << endl;
+        }
+        // Is it better than our current space? Update if so
+        if (blockPos != -1 && blockPos < f.startingPos) {
+            if (debugapply) { cout << "Updating position: YES\n"; }
+            fsP1.moveFile(f, blockPos);
         }
         else {
-            // Now have value of last file ID to backfill
-            // Find first empty space to put it in
-            long long pos = 0;
-            while (memory[pos] != emptyVal) {
-                pos++;
-            }
-            if (debugapply) { cout << "First empty space at index: " << pos << ", updating with value: " << last << endl; }
-            memory[pos] = last;
-            memory.pop_back();
-            if (debugapply) { cout << "Dropping last element...\n"; }
+            if (debugapply) { cout << "Updating position: NO\n"; }
+        }
+    }
+    // Checksum P1
+    long long sumP1 = 0;
+    for (auto f : fsP1.files) {
+        sumP1 += f.checksum();
+    }
 
-            spacesToFill--;
-            if (debugapply) { cout << "There are " << spacesToFill << " remaining empty spaces to fill before the last element" << endl; }
-            if (spacesToFill % 1000 == 0 && spacesToFill != 0) {
-                cout << spacesToFill << " remaining spaces left for processing...\n";
-            }
-        }
-    }
-    if (debugapply) {
-        cout << "Resulting memory, after space filling:\n";
-        for (long long x : memory) {
-            if (x == emptyVal) {
-                cout << " . ";
-            }
-            else {
-                cout << "{" << x << "}";
-            }
-        }
-        cout << endl;
-    }
-    // P1: Calculate 'checksum'
-    long long i = 0;
-    for (auto x : memory) {
-        // 'Checksum' = Positional index * value
-        if (x != emptyVal) {
-            sum += x * i++;
-        }
-    }
+    cout << "== Part 2 ==\n";
 
     // Processing P2
     // This time we want to consider each file in its entirety, starting from the end
@@ -199,7 +166,7 @@ int main(int argc, char* argv[])
     stack<File> fileStack;
     // Duplicate into a stack just so we can easily go backwards over each file exactly once
     // Even if we're moving them around in the actual FileSystem obj.
-    for (auto f : fs.files) {
+    for (auto f : fsP2.files) {
         fileStack.push(f);
     }
     while (!fileStack.empty()) {
@@ -213,14 +180,14 @@ int main(int argc, char* argv[])
             cout << "Working on file id " << f.id << ", len " << f.length << "\n";
         }
         // Find first available space big enough
-        long long blockPos = fs.findFirstEmptyBlock(f.length, f.startingPos);
+        long long blockPos = fsP2.findFirstEmptyBlock(f.length, f.startingPos);
         if (debugapply) {
             cout << "First possible space large enough (if any) at pos " << blockPos << endl;
         }
         // Is it better than our current space? Update if so
         if (blockPos != -1 && blockPos < f.startingPos) {
             if (debugapply) { cout << "Updating position: YES\n"; }
-            fs.moveFile(f, blockPos);
+            fsP2.moveFile(f, blockPos);
         }
         else {
             if (debugapply) { cout << "Updating position: NO\n"; }
@@ -228,13 +195,13 @@ int main(int argc, char* argv[])
     }
     // Checksum P2
     long long sumP2 = 0;
-    for (auto f : fs.files) {
+    for (auto f : fsP2.files) {
         sumP2 += f.checksum();
     }
 
     // Output
     cout << "--\n";
-    cout << "Checksum = " << sum << endl;
+    cout << "P1 Checksum = " << sumP1 << endl;
     cout << "P2 Checksum = " << sumP2 << endl;
 
     cout << "--\nEnd.\n";

@@ -2,7 +2,7 @@
 
 namespace AOC
 {
-    class File {
+    public class File {
         public long Id;
         public long StartingPos;
         public long Length;
@@ -18,9 +18,9 @@ namespace AOC
             }
             return cksum;
         }
-    };
+    }
 
-    class FileSystem {
+    public class FileSystem {
         public Dictionary<long,File> Files = new Dictionary<long, File>(); // Map starting pos. to File
         public Dictionary<long,long> Gaps = new Dictionary<long, long>(); // Map of starting pos. to length of gap
         public long StartNextFile = 0;
@@ -71,12 +71,12 @@ namespace AOC
             Files.Remove(oldStartingPos);
 
             // Update gap we just filled
-            long gapLength = Gaps[oldStartingPos];
-            Gaps.Remove(oldStartingPos);
+            long gapLength = Gaps[newStartBlockPos];
+            Gaps.Remove(newStartBlockPos);
             if (gapLength - f.Length > 0)
             {
                 // Gap not filled, so make new gap in remainder of space
-                Gaps[oldStartingPos + f.Length] = gapLength - f.Length;
+                Gaps[newStartBlockPos + f.Length] = gapLength - f.Length;
             }
 
             //if (debugprints) {
@@ -108,19 +108,19 @@ namespace AOC
                 File f = Files[pos];
                 if (remaining % 1000 == 0 && remaining != 0)
                 {
-                    Console.WriteLine("Computing possible file fragment moves, {} files remaining...", remaining);
+                    Console.WriteLine("Computing possible file fragment moves, {0} files remaining...", remaining);
                 }
                 remaining--;
                 // Run through backwards
                 if (debugapply)
                 {
-                    Console.WriteLine("Working on file id {}, len {}", f.Id, f.Length);
+                    Console.WriteLine("Working on file id {0}, len {1}", f.Id, f.Length);
                 }
                 // Find first available space big enough
                 long blockPos = FindFirstEmptyBlock(f.Length, f.StartingPos);
                 if (debugapply)
                 {
-                    Console.WriteLine("First possible space large enough (if any) at pos {}", blockPos);
+                    Console.WriteLine("First possible space large enough (if any) at pos {0}", blockPos);
                 }
                 // Is it better than our current space? Update if so
                 if (blockPos != -1 && blockPos < f.StartingPos)
@@ -149,9 +149,9 @@ namespace AOC
         }
     }
 
-    class Program
+    public class Program
     {
-        static int Main(string[] args)
+        public static int Main(string[] args)
         {
             Console.WriteLine("AOC Day 9 - C#");
 
@@ -164,20 +164,22 @@ namespace AOC
             // Part 1: 6323641412437 - correct
 
             // User args
+            List<string> argv = args.ToList();
+            
             string filename = "input";
-            if (args.Count() == 1)
+            if (argv.Count() == 0)
             {
-                Console.WriteLine("Assume default input file '{}'", filename);
+                Console.WriteLine("Assume default input file '{0}'", filename);
             }
-            else if (args.Count() > 1)
+            else if (argv.Count() > 0)
             {
-                filename = args[1];
-                Console.WriteLine("Taking CLI input file name '{}'", filename);
+                filename = argv[0];
+                Console.WriteLine("Taking CLI input file name '{0}'", filename);
             }
-            if (args.Count() > 2)
+            if (argv.Count() > 1)
             {
                 Console.WriteLine("Reading 2nd input param\n    -d / --debug for debug printing");
-                if (args[2] == "-d" || args[2] == "--debug")
+                if (argv[1] == "-d" || argv[1] == "--debug")
                 {
                     debugapply = true;
                 }
@@ -188,7 +190,7 @@ namespace AOC
             }
             if (debugapply)
             {
-                Console.WriteLine("--\nDEBUG MODE : ON\nLINE LIMIT : {}\n--", debuglimit);
+                Console.WriteLine("--\nDEBUG MODE : ON\nLINE LIMIT : {0}\n--", debuglimit);
             }
 
             // Variables for output
@@ -206,51 +208,51 @@ namespace AOC
                 StartNextFile = 0
             };
 
-            using (var fileStream = System.IO.File.OpenRead(filename))
+            using (var streamReader = new StreamReader(filename))
             {
-                using (var streamReader = new StreamReader(fileStream)) {
-                    while ((line = streamReader.ReadLine()) != null)
+                while ((line = streamReader.ReadLine()) != null)
+                {
+                    debug++;
+                    if (debugapply)
                     {
-                        debug++;
-                        if (debugapply)
+                        Console.WriteLine(line);
+                    }
+                    // Input is a single line (disk map), a series of individual blocks
+                    // We need to iterate over the line one by one
+                    // 1st digit is a file length
+                    // 2nd digit is a free space length
+                    // Repeats until end of line
+                    // Each file has a unique ID starting with 0 (these are unrelated to the block size! Always 1)
+                    int pos = 0;
+                    long len;
+                    long id = 0; // ID of file starting at 0, incrementing
+                    while (pos < line.Length)
+                    {
+                        // Read file length
+                        len = Int64.Parse(line.Substring(pos,1));
+                        //Console.WriteLine("Parsed number {0} from string '{1}'", len, line.Substring(pos,1));
+                        // Add file 'ID' to memory 'len' times
+                        for (long i = 0; i < len; i++)
                         {
-                            Console.WriteLine(line);
+                            // Use P2 code to solve P1 also, just add 'len' files of length 1 instead of 1 file length 'len'
+                            fsP1.AddFile(id, 1);
                         }
-                        // Input is a single line (disk map), a series of individual blocks
-                        // We need to iterate over the line one by one
-                        // 1st digit is a file length
-                        // 2nd digit is a free space length
-                        // Repeats until end of line
-                        // Each file has a unique ID starting with 0 (these are unrelated to the block size! Always 1)
-                        int pos = 0;
-                        long len;
-                        long id = 0; // ID of file starting at 0, incrementing
-                        while (pos < line.Length)
+                        // Filesystem for P2 also, single file length 'len'
+                        fsP2.AddFile(id, len);
+                        // Incremenent ID
+                        id++;
+                        //Console.WriteLine("ID incremented to " << id << endl;
+                        pos++;
+                        
+                        // Read free space
+                        if (pos < line.Length)
                         {
-                            // Read file length
                             len = Int64.Parse(line.Substring(pos,1));
-                            // Add file 'ID' to memory 'len' times
-                            for (long i = 0; i < len; i++)
-                            {
-                                // Use P2 code to solve P1 also, just add 'len' files of length 1 instead of 1 file length 'len'
-                                fsP1.AddFile(id, 1);
-                            }
-                            // Filesystem for P2 also, single file length 'len'
-                            fsP2.AddFile(id, len);
-                            // Incremenent ID
-                            id++;
-                            //Console.WriteLine("ID incremented to " << id << endl;
+                            //Console.WriteLine("Parsed number {0} from string '{1}'", len, line.Substring(pos,1));
+                            // Add free space '.' 'len' times
+                            fsP1.AddEmptySpace(len);
+                            fsP2.AddEmptySpace(len);
                             pos++;
-                            
-                            // Read free space
-                            if (pos < line.Length)
-                            {
-                                len = Int64.Parse(line.Substring(pos,1));
-                                // Add free space '.' 'len' times
-                                fsP1.AddEmptySpace(len);
-                                fsP2.AddEmptySpace(len);
-                                pos++;
-                            }
                         }
                     }
                 }
@@ -269,8 +271,8 @@ namespace AOC
             long sumP2 = fsP2.ProcessFileSystem(debugapply);
 
             // Output
-            Console.WriteLine("P1 Checksum = {}", sumP1);
-            Console.WriteLine("P2 Checksum = {}", sumP2);
+            Console.WriteLine("P1 Checksum = {0}", sumP1);
+            Console.WriteLine("P2 Checksum = {0}", sumP2);
 
             Console.WriteLine("--\nEnd.");
             return 0;

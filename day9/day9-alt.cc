@@ -231,9 +231,9 @@ long FileSystem::findFirstEmptyBlock(long length, long beforeBlockPos)
         return 0;
     }
 
-    int endPrevFile = files[0].startingPos + files[0].length;
-    for (int i = 1; endPrevFile < beforeBlockPos && i < files.size(); i++) {
-        int gap = files[i].startingPos - endPrevFile;
+    long endPrevFile = files[0].startingPos + files[0].length;
+    for (long i = 1; endPrevFile < beforeBlockPos && i < files.size(); i++) {
+        long gap = files[i].startingPos - endPrevFile;
         //cout << "Previous file ended at " << endPrevFile << " and this file id " << files[i].id << " starts at " << files[i].startingPos << " leaving a gap of " << gap << " before this file\n";
         if (gap >= length) {
             return endPrevFile;
@@ -252,7 +252,7 @@ void FileSystem::moveFile(File f, long newStartBlockPos) {
     //cout << "moveFile: Received move command, file id " << f.id << " to new filesystem pos " << newPos << endl;
     bool found = false;
     long oldIndex;
-    for (int i = files.size() - 1; !found && i >= 0; i--) {
+    for (long i = files.size() - 1; !found && i >= 0; i--) {
         if (files[i].id == f.id) {
             found = true;
             oldIndex = i;
@@ -272,7 +272,7 @@ void FileSystem::moveFile(File f, long newStartBlockPos) {
     // First find new index
     long newIndex;
     found = false;
-    for (int i = 0; !found && i < files.size(); i++) {
+    for (long i = 0; !found && i < files.size(); i++) {
         if (files[i].startingPos > newStartBlockPos) {
             // The moved file needs to displace this one in the list,
             // i.e. be inserted at this index
@@ -294,8 +294,8 @@ long File::checksum() {
     // Checksum is the ID multiplied by the position of each block on the filesystem
     // So if file ID 8 len 3 starts at pos 2 like so ..888..
     // We need to do 2*8 + 3*8 + 4*8
-    int cksum = 0;
-    for (int i = 0; i < length; i++) {
+    long cksum = 0;
+    for (long i = 0; i < length; i++) {
         cksum += id * (startingPos + i);
     }
     return cksum;

@@ -4,25 +4,27 @@
 #include <vector>
 #include <sstream>
 #include <stack>
+#include <map>
 
 using namespace std;
 
 class File {
     public:
-        long id;
-        long startingPos;
-        long length;
-        long checksum();
+        long long id;
+        long long startingPos;
+        long long length;
+        long long checksum();
 };
 
 class FileSystem {
     public:
-        vector<File> files;
-        long startNextFile;
-        void addFile(long id, long length);
-        void addEmptySpace(long length);
-        long findFirstEmptyBlock(long length, long beforeBlockPos);
-        void moveFile(File f, long newStartBlockPos);
+        map<long long,File> files; // Map starting pos. to File
+        map<long long,long long> gaps; // Map of starting pos. to length of gap
+        long long startNextFile;
+        void addFile(long long id, long long length);
+        void addEmptySpace(long long length);
+        long long findFirstEmptyBlock(long long length, long long beforeBlockPos);
+        void moveFile(File f, long long newStartBlockPos);
 };
 
 int main(int argc, char* argv[])
@@ -30,7 +32,7 @@ int main(int argc, char* argv[])
     cout << "--\nAoC Day 9\n--\n";
     // For testing
     int debuglimit = 1;
-    long debug = 0;
+    long long debug = 0;
     bool debugapply = false;
 
     // Part 1: 6323378990915 - incorrect, too small
@@ -84,14 +86,14 @@ int main(int argc, char* argv[])
         // 2nd digit is a free space length
         // Repeats until end of line
         // Each file has a unique ID starting with 0 (these are unrelated to the block size! Always 1)
-        long pos = 0;
-        long len;
-        long id = 0; // ID of file starting at 0, incrementing
+        long long pos = 0;
+        long long len;
+        long long id = 0; // ID of file starting at 0, incrementing
         while (pos < line.length()) {
             // Read file length
             len = stol(line.substr(pos,1));
             // Add file 'ID' to memory 'len' times
-            for (long i = 0; i < len; i++) {
+            for (long long i = 0; i < len; i++) {
                 // Use P2 code to solve P1 also, just add 'len' files of length 1 instead of 1 file length 'len'
                 fsP1.addFile(id, 1);
             }
@@ -120,24 +122,21 @@ int main(int argc, char* argv[])
     // Processing P1
     // Refactored to use same code as P2, each file is just broken up into files of blocklength 1 with the same ID
     // Only try to move a file once before moving on
-    stack<File> fileStackP1;
     // Duplicate into a stack just so we can easily go backwards over each file exactly once
     // Even if we're moving them around in the actual FileSystem obj.
-    for (auto f : fsP1.files) {
-        fileStackP1.push(f);
-    }
-    while (!fileStackP1.empty()) {
-        File f = fileStackP1.top();
-        fileStackP1.pop();
-        if (fileStackP1.size() % 1000 == 0 && fileStackP1.size() != 0) {
-            cout << "Computing possible file fragment moves, " << fileStackP1.size() << " files remaining...\n";
+    int remaining = fsP1.files.size();
+    for (auto iter = fsP1.files.rbegin(); iter != fsP1.files.rend(); iter++) {
+        File f = iter->second;
+        if (remaining % 1000 == 0 && remaining != 0) {
+            cout << "Computing possible file fragment moves, " << remaining << " files remaining...\n";
         }
+        remaining--;
         // Run through backwards
         if (debugapply) {
             cout << "Working on file id " << f.id << ", len " << f.length << "\n";
         }
         // Find first available space big enough
-        long blockPos = fsP1.findFirstEmptyBlock(f.length, f.startingPos);
+        long long blockPos = fsP1.findFirstEmptyBlock(f.length, f.startingPos);
         if (debugapply) {
             cout << "First possible space large enough (if any) at pos " << blockPos << endl;
         }
@@ -151,9 +150,9 @@ int main(int argc, char* argv[])
         }
     }
     // Checksum P1
-    long sumP1 = 0;
+    long long sumP1 = 0;
     for (auto f : fsP1.files) {
-        sumP1 += f.checksum();
+        sumP1 += f.second.checksum();
     }
 
     cout << "== Part 2 ==\n";
@@ -163,24 +162,21 @@ int main(int argc, char* argv[])
     // and working backwards
     // Only try to move a file once before moving on
     // If there are no spaces large enough to accomodate it in its entirety it does not move
-    stack<File> fileStack;
     // Duplicate into a stack just so we can easily go backwards over each file exactly once
     // Even if we're moving them around in the actual FileSystem obj.
-    for (auto f : fsP2.files) {
-        fileStack.push(f);
-    }
-    while (!fileStack.empty()) {
-        File f = fileStack.top();
-        fileStack.pop();
-        if (fileStack.size() % 1000 == 0 && fileStack.size() != 0) {
-            cout << "Computing possible file fragment moves, " << fileStack.size() << " files remaining...\n";
+    remaining = fsP2.files.size();
+    for (auto iter = fsP2.files.rbegin(); iter != fsP2.files.rend(); iter++) {
+        File f = iter->second;
+        if (remaining % 1000 == 0 && remaining != 0) {
+            cout << "Computing possible file fragment moves, " << remaining << " files remaining...\n";
         }
+        remaining--;
         // Run through backwards
         if (debugapply) {
             cout << "Working on file id " << f.id << ", len " << f.length << "\n";
         }
         // Find first available space big enough
-        long blockPos = fsP2.findFirstEmptyBlock(f.length, f.startingPos);
+        long long blockPos = fsP2.findFirstEmptyBlock(f.length, f.startingPos);
         if (debugapply) {
             cout << "First possible space large enough (if any) at pos " << blockPos << endl;
         }
@@ -194,9 +190,9 @@ int main(int argc, char* argv[])
         }
     }
     // Checksum P2
-    long sumP2 = 0;
+    long long sumP2 = 0;
     for (auto f : fsP2.files) {
-        sumP2 += f.checksum();
+        sumP2 += f.second.checksum();
     }
 
     // Output
@@ -208,94 +204,68 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-void FileSystem::addFile(long id, long length)
+void FileSystem::addFile(long long id, long long length)
 {
     File f;
     f.startingPos = startNextFile;
     f.length = length;
     f.id = id;
-    files.push_back(f);
+    files[startNextFile] = f;
     startNextFile += length;
 }
 
-void FileSystem::addEmptySpace(long length) {
+void FileSystem::addEmptySpace(long long length) {
+
+    gaps[startNextFile] = length;
     startNextFile += length;
 }
 
-long FileSystem::findFirstEmptyBlock(long length, long beforeBlockPos)
+long long FileSystem::findFirstEmptyBlock(long long length, long long beforeBlockPos)
 {
-    // Special case, if the filesystem starts with a gap!
-    // ...0.11.2
-    if (files[0].startingPos >= length) {
-        cout << "DEBUG: Gap big enough for " << length << " before file 0!";
-        return 0;
-    }
-
-    long endPrevFile = files[0].startingPos + files[0].length;
-    for (long i = 1; endPrevFile < beforeBlockPos && i < files.size(); i++) {
-        long gap = files[i].startingPos - endPrevFile;
-        //cout << "Previous file ended at " << endPrevFile << " and this file id " << files[i].id << " starts at " << files[i].startingPos << " leaving a gap of " << gap << " before this file\n";
-        if (gap >= length) {
-            return endPrevFile;
-            //cout << "Gap found at pos. " << endPrevFile << endl;
+    for (auto it = gaps.begin(); it != gaps.end(); it++) {
+        // Ordered map so we should iterate from earliest starting pos
+        long long gapStartBlock = it->first;
+        long long gapLength = it->second;
+        if (gapLength >= length) {
+            // Use this one!
+            // Previous gap at X is now 0, but whatever is left is a new gap starting X + length_of_file
+            return gapStartBlock;
         }
-        endPrevFile = files[i].startingPos + files[i].length;
     }
     //cout << "No gap found, returning -1\n";
     return -1;
 }
     
-void FileSystem::moveFile(File f, long newStartBlockPos) {
-    // Must find and erase file f from the file list
-    // And insert it again at the new position
+void FileSystem::moveFile(File f, long long newStartBlockPos) {
     // Be careful not to mix up block positions and filesystem index positions
     //cout << "moveFile: Received move command, file id " << f.id << " to new filesystem pos " << newPos << endl;
-    bool found = false;
-    long oldIndex;
-    for (long i = files.size() - 1; !found && i >= 0; i--) {
-        if (files[i].id == f.id) {
-            found = true;
-            oldIndex = i;
-            //cout << "moveFile: found old vector index " << oldIndex << endl;
-        }
-    }
-    if (found) {
-        // Remove it
-        files.erase(files.begin()+oldIndex);
-    }
-    else {
-        ostringstream os;
-        os << "Didn't find file id " << f.id << " in FileSystem files";
-        throw runtime_error(os.str());
-    }
-    // Insert at new location
-    // First find new index
-    long newIndex;
-    found = false;
-    for (long i = 0; !found && i < files.size(); i++) {
-        if (files[i].startingPos > newStartBlockPos) {
-            // The moved file needs to displace this one in the list,
-            // i.e. be inserted at this index
-            newIndex = i;
-            //cout << "Found insertion index for file at " << newIndex << endl;
-            //cout << "== because newPos = " << newPos << " but file index " << i << " id " << files[i].id << " fs pos is " << files[i].startingPos << endl;
-            found = true;
-        }
-    }
+
+    // Update location
+    long long oldStartingPos = f.startingPos;
     f.startingPos = newStartBlockPos;
-    files.insert(files.begin()+newIndex, f);
+    files[newStartBlockPos] = f;
+    files.erase(oldStartingPos);
+
+    // Update gap we just filled
+    long long gapLength = gaps[oldStartingPos];
+    gaps.erase(oldStartingPos);
+    if (gapLength - f.length > 0) {
+        // Gap not filled, so make new gap in remainder of space
+        gaps[oldStartingPos + f.length] = gapLength - f.length;
+    }
+
     //cout << "  Contents of files vector after move command\n";
     //for (auto f : files) {
     //    cout << "    Vector element : file id " << f.id << endl;
     //}
 }
 
-long File::checksum() {
+long long File::checksum() {
     // Checksum is the ID multiplied by the position of each block on the filesystem
     // So if file ID 8 len 3 starts at pos 2 like so ..888..
     // We need to do 2*8 + 3*8 + 4*8
-    long cksum = 0;
-    for (long i = 0; i < length; i++) {
+    long long cksum = 0;
+    for (long long i = 0; i < length; i++) {
         cksum += id * (startingPos + i);
     }
     return cksum;

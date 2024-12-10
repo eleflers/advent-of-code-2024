@@ -185,11 +185,11 @@ void FileSystem::moveFile(File f, long long newStartBlockPos, bool debugprints) 
     files.erase(oldStartingPos);
 
     // Update gap we just filled
-    long long gapLength = gaps[oldStartingPos];
-    gaps.erase(oldStartingPos);
+    long long gapLength = gaps[newStartBlockPos];
+    gaps.erase(newStartBlockPos);
     if (gapLength - f.length > 0) {
         // Gap not filled, so make new gap in remainder of space
-        gaps[oldStartingPos + f.length] = gapLength - f.length;
+        gaps[newStartBlockPos + f.length] = gapLength - f.length;
     }
 
     if (debugprints) {

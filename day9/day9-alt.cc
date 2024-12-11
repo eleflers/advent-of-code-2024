@@ -213,16 +213,9 @@ long long File::checksum() {
 
 long long processFileSystem(FileSystem fs, bool debugapply) {
     int remaining = fs.files.size();
-    // Convoluted way to get a stack of positions to go through in reverse
-    // since apparently maps aren't sorted
-    vector<long long> vec;
     stack<long long> posStack;
     for (auto iter = fs.files.begin(); iter != fs.files.end(); iter++) {
-        vec.push_back(iter->first);
-    }
-    sort(vec.begin(), vec.end());
-    for (auto v : vec) {
-        posStack.push(v);
+        posStack.push(iter->first);
     }
     while (posStack.size() > 0) {
         long long pos = posStack.top();

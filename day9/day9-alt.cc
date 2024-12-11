@@ -105,7 +105,7 @@ int main(int argc, char* argv[])
             id++;
             //cout << "ID incremented to " << id << endl;
             pos++;
-            
+
             // Read free space
             if (pos < line.length()) {
                 len = stoll(line.substr(pos,1));
@@ -164,14 +164,16 @@ long long FileSystem::findFirstEmptyBlock(long long length, long long beforeBloc
         long long gapLength = it->second;
         if (gapLength >= length) {
             // Use this one!
-            // Previous gap at X is now 0, but whatever is left is a new gap starting X + length_of_file
             return gapStartBlock;
+        }
+        else if (gapStartBlock > beforeBlockPos) {
+            return -1;
         }
     }
     //cout << "No gap found, returning -1\n";
     return -1;
 }
-    
+
 void FileSystem::moveFile(File f, long long newStartBlockPos, bool debugprints) {
     // Be careful not to mix up block positions and filesystem index positions
     if (debugprints) {

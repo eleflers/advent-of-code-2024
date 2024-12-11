@@ -52,4 +52,23 @@
        0.664136000 seconds user
        0.032159000 seconds sys
 
+# C++ - Gap search optimisation, not past current pos.
+
+ Performance counter stats for './a.out input':
+
+            795.89 msec task-clock:u                     #    0.983 CPUs utilized
+                 0      context-switches:u               #    0.000 /sec
+                 0      cpu-migrations:u                 #    0.000 /sec
+             2,843      page-faults:u                    #    3.572 K/sec
+     2,966,880,799      cycles:u                         #    3.728 GHz
+     4,109,188,430      instructions:u                   #    1.39  insn per cycle
+       798,021,650      branches:u                       #    1.003 G/sec
+         9,248,132      branch-misses:u                  #    1.16% of all branches
+
+       0.809425675 seconds time elapsed
+
+       0.776359000 seconds user
+       0.015980000 seconds sys
+
+
 

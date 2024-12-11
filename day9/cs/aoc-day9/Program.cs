@@ -45,13 +45,18 @@ namespace AOC
             foreach (var g in Gaps)
             {
                 // Ordered map so we should iterate from earliest starting pos
+                // Can we make this assumption about C# dictionaries too?
                 long gapStartBlock = g.Key;
                 long gapLength = g.Value;
                 if (gapLength >= length)
                 {
                     // Use this one!
-                    // Previous gap at X is now 0, but whatever is left is a new gap starting X + length_of_file
                     return gapStartBlock;
+                }
+                else if (gapStartBlock > beforeBlockPos)
+                {
+                    // None suitable before the location we were given
+                    return -1;
                 }
             }
             //Console.WriteLine("No gap found, returning -1\n";
@@ -60,9 +65,9 @@ namespace AOC
         public void MoveFile(File f, long newStartBlockPos, bool debugprints)
         {
             // Be careful not to mix up block positions and filesystem index positions
-            //if (debugprints) {
-            //    Console.WriteLine("MoveFile: Received move command, file id " << f.id << " from filesystem pos " << f.startingPos << " to " << newStartBlockPos << endl;
-            //}
+            if (debugprints) {
+                Console.WriteLine("MoveFile: Received move command, file id {0} from filesystem pos {1} to {2}", f.Id, f.StartingPos, newStartBlockPos);
+            }
 
             // Update location
             long oldStartingPos = f.StartingPos;
@@ -79,30 +84,20 @@ namespace AOC
                 Gaps[newStartBlockPos + f.Length] = gapLength - f.Length;
             }
 
-            //if (debugprints) {
-            //    Console.WriteLine("  Contents of gaps map after move command:\n";
-            //    for (auto it = gaps.begin(); it != gaps.end(); it++) {
-            //        Console.WriteLine("    Gap pos. " << it->first << " length " << it->second << endl;
-            //    }
-            //}
+            if (debugprints)
+            {
+                Console.WriteLine("  Contents of gaps map after move command:");
+                foreach (var g in Gaps)
+                {
+                    Console.WriteLine("    Gap pos. {0} length {1}", g.Key, g.Value);
+                }
+            }
         }
         public long ProcessFileSystem(bool debugapply)
         {
-            int remaining = Files.Count();
-            // Convoluted way to get a stack of positions to go through in reverse
-            // since apparently maps aren't sorted
-            List<long> vec = new List<long>();
-            Stack<long> posStack = new Stack<long>();
-            foreach (long pos in Files.Keys)
-            {
-                vec.Add(pos);
-            }
-            vec.Sort();
-            foreach (var v in vec)
-            {
-                posStack.Push(v);
-            }
-            while (posStack.Count() > 0)
+            int remaining = Files.Count;
+            Stack<long> posStack = new Stack<long>(Files.Keys);
+            while (posStack.Count > 0)
             {
                 long pos = posStack.Pop();
                 File f = Files[pos];
@@ -167,16 +162,16 @@ namespace AOC
             List<string> argv = args.ToList();
             
             string filename = "input";
-            if (argv.Count() == 0)
+            if (argv.Count == 0)
             {
                 Console.WriteLine("Assume default input file '{0}'", filename);
             }
-            else if (argv.Count() > 0)
+            else if (argv.Count > 0)
             {
                 filename = argv[0];
                 Console.WriteLine("Taking CLI input file name '{0}'", filename);
             }
-            if (argv.Count() > 1)
+            if (argv.Count > 1)
             {
                 Console.WriteLine("Reading 2nd input param\n    -d / --debug for debug printing");
                 if (argv[1] == "-d" || argv[1] == "--debug")

@@ -1,0 +1,55 @@
+# CPP
+
+ Performance counter stats for './a.out input':
+
+          1,162.55 msec task-clock:u                     #    0.993 CPUs utilized
+                 0      context-switches:u               #    0.000 /sec
+                 0      cpu-migrations:u                 #    0.000 /sec
+             3,039      page-faults:u                    #    2.614 K/sec
+     4,395,137,632      cycles:u                         #    3.781 GHz
+     5,878,116,245      instructions:u                   #    1.34  insn per cycle
+     1,130,442,870      branches:u                       #  972.383 M/sec
+        14,273,193      branch-misses:u                  #    1.26% of all branches
+
+       1.170263149 seconds time elapsed
+
+       1.133291000 seconds user
+       0.023984000 seconds sys
+
+# CSharp
+
+ Performance counter stats for 'bin/Debug/net9.0/aoc-day9 /home/lefler/mnt/coding/advent-of-code-2024/day9/input':
+
+            936.14 msec task-clock:u                     #    1.046 CPUs utilized
+                 0      context-switches:u               #    0.000 /sec
+                 0      cpu-migrations:u                 #    0.000 /sec
+             5,188      page-faults:u                    #    5.542 K/sec
+     3,344,268,034      cycles:u                         #    3.572 GHz
+     6,390,561,190      instructions:u                   #    1.91  insn per cycle
+     1,283,936,148      branches:u                       #    1.372 G/sec
+        18,803,909      branch-misses:u                  #    1.46% of all branches
+
+       0.894893542 seconds time elapsed
+
+       0.897775000 seconds user
+       0.033616000 seconds sys
+
+# C# - Gap search optimisation, not past current pos.
+
+ Performance counter stats for 'bin/Debug/net9.0/aoc-day9 ../../input':
+
+            699.90 msec task-clock:u                     #    1.038 CPUs utilized
+                 0      context-switches:u               #    0.000 /sec
+                 0      cpu-migrations:u                 #    0.000 /sec
+             4,852      page-faults:u                    #    6.932 K/sec
+     2,465,369,078      cycles:u                         #    3.522 GHz
+     4,810,130,418      instructions:u                   #    1.95  insn per cycle
+       934,120,086      branches:u                       #    1.335 G/sec
+        11,337,118      branch-misses:u                  #    1.21% of all branches
+
+       0.674364332 seconds time elapsed
+
+       0.664136000 seconds user
+       0.032159000 seconds sys
+
+

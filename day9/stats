@@ -106,4 +106,69 @@
        0.763085000 seconds user
        0.016826000 seconds sys
 
+# Stress test
+# P1 is extremely inefficient and could benefit from bespoke treatment since
+# Chunks being moved are always 1 and gaps guaranteed to be filled
+# Stack and queue
+# C# easily wins
+P1 Checksum = 70317453809507637
+P2 Checksum = 70351090993107482
+--
+End.
+
+ Performance counter stats for 'cs/aoc-day9/bin/Debug/net9.0/aoc-day9 4/XhSB.txt':
+
+        492,846.72 msec task-clock:u                     #    0.993 CPUs utilized
+                 0      context-switches:u               #    0.000 /sec
+                 0      cpu-migrations:u                 #    0.000 /sec
+            24,208      page-faults:u                    #   49.119 /sec
+ 1,837,127,700,427      cycles:u                         #    3.728 GHz
+ 2,095,246,829,600      instructions:u                   #    1.14  insn per cycle
+   456,016,542,297      branches:u                       #  925.271 M/sec
+    25,917,195,043      branch-misses:u                  #    5.68% of all branches
+
+     496.357503381 seconds time elapsed
+
+     490.351811000 seconds user
+       0.246845000 seconds sys
+
+# Stress test C++
+P1 Checksum = 70317453809507637
+P2 Checksum = 70351090993107482
+--
+End.
+
+ Performance counter stats for './a.out 4/XhSB.txt':
+
+        948,690.86 msec task-clock:u                     #    0.999 CPUs utilized
+                 0      context-switches:u               #    0.000 /sec
+                 0      cpu-migrations:u                 #    0.000 /sec
+            46,345      page-faults:u                    #   48.852 /sec
+ 3,584,258,605,840      cycles:u                         #    3.778 GHz
+ 4,277,943,835,294      instructions:u                   #    1.19  insn per cycle
+   837,473,658,060      branches:u                       #  882.768 M/sec
+    13,128,249,998      branch-misses:u                  #    1.57% of all branches
+
+     949.635457497 seconds time elapsed
+
+     944.458270000 seconds user
+       0.342594000 seconds sys
+
+# Fix C# error, use SortedDictionary for more fair comparison with C++ map (ordered)
+
+ Performance counter stats for 'bin/Debug/net9.0/aoc-day9 ../../input':
+
+            817.54 msec task-clock:u                     #    0.981 CPUs utilized
+                 0      context-switches:u               #    0.000 /sec
+                 0      cpu-migrations:u                 #    0.000 /sec
+             5,537      page-faults:u                    #    6.773 K/sec
+     2,812,761,223      cycles:u                         #    3.441 GHz
+     5,291,819,949      instructions:u                   #    1.88  insn per cycle
+     1,052,879,560      branches:u                       #    1.288 G/sec
+        13,651,418      branch-misses:u                  #    1.30% of all branches
+
+       0.833647933 seconds time elapsed
+
+       0.764230000 seconds user
+       0.048362000 seconds sys
 

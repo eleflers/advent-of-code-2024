@@ -21,8 +21,8 @@ namespace AOC
     }
 
     public class FileSystem {
-        public Dictionary<long,File> Files = new Dictionary<long, File>(); // Map starting pos. to File
-        public Dictionary<long,int> Gaps = new Dictionary<long, int>(); // Map of starting pos. to length of gap
+        public SortedDictionary<long,File> Files = new SortedDictionary<long, File>(); // Map starting pos. to File
+        public SortedDictionary<long,int> Gaps = new SortedDictionary<long, int>(); // Map of starting pos. to length of gap
         public long StartNextFile = 0;
         public void AddFile(long id, int length)
         {

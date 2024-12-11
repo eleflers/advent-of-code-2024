@@ -223,7 +223,7 @@ long long processFileSystem(FileSystem fs, bool debugapply) {
         long long pos = posStack.top();
         posStack.pop();
         File f = fs.files[pos];
-        if (remaining % 1000 == 0 && remaining != 0) {
+        if (remaining % 10000 == 0 && remaining != 0) {
             cout << "Computing possible file fragment moves, " << remaining << " files remaining...\n";
         }
         remaining--;

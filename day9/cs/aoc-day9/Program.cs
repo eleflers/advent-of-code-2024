@@ -101,7 +101,7 @@ namespace AOC
             {
                 long pos = posStack.Pop();
                 File f = Files[pos];
-                if (remaining % 1000 == 0 && remaining != 0)
+                if (remaining % 10000 == 0 && remaining != 0)
                 {
                     Console.WriteLine("Computing possible file fragment moves, {0} files remaining...", remaining);
                 }

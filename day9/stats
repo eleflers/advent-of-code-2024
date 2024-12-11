@@ -70,5 +70,40 @@
        0.776359000 seconds user
        0.015980000 seconds sys
 
+# C# - Fewer prints
+
+ Performance counter stats for 'bin/Debug/net9.0/aoc-day9 ../../input':
+
+            718.70 msec task-clock:u                     #    1.003 CPUs utilized
+                 0      context-switches:u               #    0.000 /sec
+                 0      cpu-migrations:u                 #    0.000 /sec
+             4,433      page-faults:u                    #    6.168 K/sec
+     2,573,131,719      cycles:u                         #    3.580 GHz
+     5,353,268,443      instructions:u                   #    2.08  insn per cycle
+     1,024,217,876      branches:u                       #    1.425 G/sec
+        11,070,929      branch-misses:u                  #    1.08% of all branches
+
+       0.716672192 seconds time elapsed
+
+       0.692494000 seconds user
+       0.023820000 seconds sys
+
+# C++ - Fewer prints
+
+ Performance counter stats for './a.out input':
+
+            782.32 msec task-clock:u                     #    0.992 CPUs utilized
+                 0      context-switches:u               #    0.000 /sec
+                 0      cpu-migrations:u                 #    0.000 /sec
+             2,843      page-faults:u                    #    3.634 K/sec
+     2,956,506,010      cycles:u                         #    3.779 GHz
+     4,109,113,278      instructions:u                   #    1.39  insn per cycle
+       798,004,962      branches:u                       #    1.020 G/sec
+         9,338,872      branch-misses:u                  #    1.17% of all branches
+
+       0.788992926 seconds time elapsed
+
+       0.763085000 seconds user
+       0.016826000 seconds sys
 
 

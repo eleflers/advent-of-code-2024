@@ -5,14 +5,14 @@ namespace AOC
     public class File {
         public long Id;
         public long StartingPos;
-        public long Length;
+        public int Length;
         public long Checksum()
         {
             // Checksum is the ID multiplied by the position of each block on the filesystem
             // So if file ID 8 len 3 starts at pos 2 like so ..888..
             // We need to do 2*8 + 3*8 + 4*8
             long cksum = 0;
-            for (long i = 0; i < Length; i++)
+            for (int i = 0; i < Length; i++)
             {
                 cksum += Id * (StartingPos + i);
             }
@@ -22,10 +22,15 @@ namespace AOC
 
     public class FileSystem {
         public Dictionary<long,File> Files = new Dictionary<long, File>(); // Map starting pos. to File
-        public Dictionary<long,long> Gaps = new Dictionary<long, long>(); // Map of starting pos. to length of gap
+        public Dictionary<long,int> Gaps = new Dictionary<long, int>(); // Map of starting pos. to length of gap
         public long StartNextFile = 0;
-        public void AddFile(long id, long length)
+        public void AddFile(long id, int length)
         {
+            if (length == 0)
+            {
+                // Don't be fooled by 0 length files!
+                return;
+            }
             File f = new File()
             {
                 Id = id,
@@ -35,19 +40,19 @@ namespace AOC
             Files.Add(StartNextFile, f);
             StartNextFile += length;
         }
-        public void AddEmptySpace(long length)
+        public void AddEmptySpace(int length)
         {
             Gaps[StartNextFile] = length;
             StartNextFile += length;
         }
-        public long FindFirstEmptyBlock(long length, long beforeBlockPos)
+        public long FindFirstEmptyBlock(int length, long beforeBlockPos)
         {
             foreach (var g in Gaps)
             {
                 // Ordered map so we should iterate from earliest starting pos
                 // Can we make this assumption about C# dictionaries too?
                 long gapStartBlock = g.Key;
-                long gapLength = g.Value;
+                int gapLength = g.Value;
                 if (gapLength >= length)
                 {
                     // Use this one!
@@ -76,7 +81,7 @@ namespace AOC
             Files.Remove(oldStartingPos);
 
             // Update gap we just filled
-            long gapLength = Gaps[newStartBlockPos];
+            int gapLength = Gaps[newStartBlockPos];
             Gaps.Remove(newStartBlockPos);
             if (gapLength - f.Length > 0)
             {
@@ -160,7 +165,7 @@ namespace AOC
 
             // User args
             List<string> argv = args.ToList();
-            
+
             string filename = "input";
             if (argv.Count == 0)
             {
@@ -189,7 +194,7 @@ namespace AOC
             }
 
             // Variables for output
-            //long sum = 0;
+            //int sum = 0;
 
             // Read file
             String? line;
@@ -219,15 +224,15 @@ namespace AOC
                     // Repeats until end of line
                     // Each file has a unique ID starting with 0 (these are unrelated to the block size! Always 1)
                     int pos = 0;
-                    long len;
+                    int len;
                     long id = 0; // ID of file starting at 0, incrementing
                     while (pos < line.Length)
                     {
                         // Read file length
-                        len = Int64.Parse(line.Substring(pos,1));
+                        len = int.Parse(line.Substring(pos,1));
                         //Console.WriteLine("Parsed number {0} from string '{1}'", len, line.Substring(pos,1));
                         // Add file 'ID' to memory 'len' times
-                        for (long i = 0; i < len; i++)
+                        for (int i = 0; i < len; i++)
                         {
                             // Use P2 code to solve P1 also, just add 'len' files of length 1 instead of 1 file length 'len'
                             fsP1.AddFile(id, 1);
@@ -238,11 +243,11 @@ namespace AOC
                         id++;
                         //Console.WriteLine("ID incremented to " << id << endl;
                         pos++;
-                        
+
                         // Read free space
                         if (pos < line.Length)
                         {
-                            len = Int64.Parse(line.Substring(pos,1));
+                            len = int.Parse(line.Substring(pos,1));
                             //Console.WriteLine("Parsed number {0} from string '{1}'", len, line.Substring(pos,1));
                             // Add free space '.' 'len' times
                             fsP1.AddEmptySpace(len);

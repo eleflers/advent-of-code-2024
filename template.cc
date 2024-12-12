@@ -7,12 +7,11 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
-    cout << "--\nAoC Day 3\n--\n";
+    cout << "--\nAoC Day X\n--\n";
     // For testing
     int debuglimit = 1;
     int debug = 0;
     bool debugapply = true;
-    if (debugapply) { cout << "DEBUG MODE : ON\nLINE LIMIT : " << debuglimit << "\n--" << endl; }
 
     // User args
     string filename = "input";
@@ -23,11 +22,24 @@ int main(int argc, char* argv[])
         filename = argv[1];
         cout << "Taking CLI input file name '" << filename << "'\n";
     }
+    if (argc > 2) {
+        cout << "Reading 2nd input param\n    -d / --debug for debug printing\n";
+        if (string{argv[2]} == "-d" || string{argv[2]} == "--debug") {
+            debugapply = true;
+        }
+        else {
+            debugapply = false;
+        }
+    }
+    if (debugapply) {
+        cout << "--\nDEBUG MODE : ON\nLINE LIMIT : " << debuglimit << "\n--" << endl;
+    }
+
     // Input file
     ifstream input(filename);
 
     // Variables for output
-    int sum = 0;
+    long sum = 0;
 
     // Read file
     string line;

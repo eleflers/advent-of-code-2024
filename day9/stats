@@ -172,3 +172,73 @@ End.
        0.764230000 seconds user
        0.048362000 seconds sys
 
+# New fair stress test, C++
+ Performance counter stats for './a.out 4/XhSB.txt':
+
+      1,200,810.55 msec task-clock:u                     #    0.990 CPUs utilized
+                 0      context-switches:u               #    0.000 /sec
+                 0      cpu-migrations:u                 #    0.000 /sec
+            46,343      page-faults:u                    #   38.593 /sec
+ 4,487,179,552,953      cycles:u                         #    3.737 GHz
+ 4,277,943,931,354      instructions:u                   #    0.95  insn per cycle
+   837,473,907,401      branches:u                       #  697.424 M/sec
+    13,147,997,557      branch-misses:u                  #    1.57% of all branches
+
+    1212.760113881 seconds time elapsed
+
+    1194.883273000 seconds user
+       1.686878000 seconds sys
+
+# C#
+ Performance counter stats for 'cs/aoc-day9/bin/Debug/net9.0/aoc-day9 4/XhSB.txt':
+
+      1,003,682.40 msec task-clock:u                     #    0.985 CPUs utilized
+                 0      context-switches:u               #    0.000 /sec
+                 0      cpu-migrations:u                 #    0.000 /sec
+            42,998      page-faults:u                    #   42.840 /sec
+ 3,735,586,365,000      cycles:u                         #    3.722 GHz
+ 3,546,742,048,261      instructions:u                   #    0.95  insn per cycle
+   746,635,578,054      branches:u                       #  743.896 M/sec
+     9,450,282,767      branch-misses:u                  #    1.27% of all branches
+
+    1019.204293800 seconds time elapsed
+
+     998.637075000 seconds user
+       1.192617000 seconds sys
+
+# C++ Optimisation and improvements, bespoke P1 treatment with queue
+
+ Performance counter stats for './a.out input':
+
+            183.68 msec task-clock:u                     #    0.965 CPUs utilized
+                 0      context-switches:u               #    0.000 /sec
+                 0      cpu-migrations:u                 #    0.000 /sec
+             1,318      page-faults:u                    #    7.176 K/sec
+       650,892,847      cycles:u                         #    3.544 GHz
+       892,558,780      instructions:u                   #    1.37  insn per cycle
+       172,369,797      branches:u                       #  938.433 M/sec
+         2,245,745      branch-misses:u                  #    1.30% of all branches
+
+       0.190387676 seconds time elapsed
+
+       0.175956000 seconds user
+       0.007255000 seconds sys
+
+# Improved C++ on larger dataset
+
+ Performance counter stats for './a.out 4/XhSB.txt':
+
+        183,794.31 msec task-clock:u                     #    0.999 CPUs utilized
+                 0      context-switches:u               #    0.000 /sec
+                 0      cpu-migrations:u                 #    0.000 /sec
+            14,690      page-faults:u                    #   79.926 /sec
+   698,523,662,974      cycles:u                         #    3.801 GHz
+   721,948,181,667      instructions:u                   #    1.03  insn per cycle
+   141,143,997,621      branches:u                       #  767.945 M/sec
+     2,276,150,043      branch-misses:u                  #    1.61% of all branches
+
+     184.055929380 seconds time elapsed
+
+     182.896142000 seconds user
+       0.120135000 seconds sys
+

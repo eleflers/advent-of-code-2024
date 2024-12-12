@@ -5,6 +5,7 @@
 #include <sstream>
 #include <stack>
 #include <map>
+#include <queue>
 
 using namespace std;
 
@@ -20,12 +21,13 @@ class FileSystem {
     public:
         vector<File> files;
         map<long,int> gaps; // Map of starting pos. to length of gap
+        queue<long> gapQueue; // Map of individual gap positions for P1 optimisation
         long startNextFile;
         void addFile(long id, int length);
         void addEmptySpace(int length);
         long findAndUpdateFirstEmptyBlock(int length, long beforeBlockPos);
         void moveFile(File& f, long newStartBlockPos, bool debugprints);
-        long processFileSystem(bool debugapply);
+        long processFileSystem(bool p1_optimised, bool debugapply);
 };
 
 int main(int argc, char* argv[])
@@ -126,15 +128,33 @@ int main(int argc, char* argv[])
     // Only try to move a file once before moving on
     // Duplicate into a stack just so we can easily go backwards over each file exactly once
     // Even if we're moving them around in the actual FileSystem obj.
-    long sumP1 = fsP1.processFileSystem(debugapply);
+    long sumP1 = fsP1.processFileSystem(true, debugapply);
 
     cout << "== Part 2 ==\n";
-    long sumP2 = fsP2.processFileSystem(debugapply);
+    long sumP2 = fsP2.processFileSystem(false, debugapply);
 
     // Output
     cout << "--\n";
     cout << "P1 Checksum = " << sumP1 << endl;
     cout << "P2 Checksum = " << sumP2 << endl;
+
+    // Checks
+    if (sumP1 == 1928 || sumP1 == 6323641412437)
+    {
+        cout << "P1 Answer looks correct\n";
+    }
+    else
+    {
+        cout << "P1 Answer looks wrong\n";
+    }
+    if (sumP2 == 2858 || sumP2 == 6351801932670)
+    {
+        cout << "P2 Answer looks correct\n";
+    }
+    else
+    {
+        cout << "P2 Answer looks wrong\n";
+    }
 
     cout << "--\nEnd.\n";
     return 0;
@@ -156,7 +176,13 @@ void FileSystem::addFile(long id, int length)
 
 void FileSystem::addEmptySpace(int length) {
 
+    // Map for general solution
     gaps[startNextFile] = length;
+    // Queue for P1 optimisations
+    for (int i = 0; i < length; i++) {
+        gapQueue.push(startNextFile + i);
+    }
+    // Keep track where we are
     startNextFile += length;
 }
 
@@ -220,7 +246,7 @@ long File::checksum() {
     return cksum;
 }
 
-long FileSystem::processFileSystem(bool debugapply) {
+long FileSystem::processFileSystem(bool p1_optimised, bool debugapply) {
     long remaining = files.size();
     long blockPos;
     File* f;
@@ -235,18 +261,58 @@ long FileSystem::processFileSystem(bool debugapply) {
         if (debugapply) {
             cout << "Working on file id " << f->id << ", len " << f->length << "\n";
         }
-        // Find first available space big enough
-        blockPos = findAndUpdateFirstEmptyBlock(f->length, f->startingPos);
-        if (debugapply) {
-            cout << "First possible space large enough (if any) at pos " << blockPos << endl;
-        }
-        // Is it better than our current space? Update if so
-        if (blockPos != -1 && blockPos < f->startingPos) {
-            if (debugapply) { cout << "Updating position: YES\n"; }
-            moveFile(*f, blockPos, debugapply);
+        if (p1_optimised) {
+            // Part 1 optimisations can be used
+            // Files and gaps always guaranteed to be size 1
+            // Still using the original vector, but don't bother checking lengths
+            // Just pop and use the first queue element
+            if (!gapQueue.empty())
+            {
+                blockPos = gapQueue.front();
+                gapQueue.pop();
+                if (debugapply) {
+                    cout << "Popped block position " << blockPos << " from gap queue, there are " << gapQueue.size() << " queue positions left to test\n";
+                }
+                if (blockPos < f->startingPos)
+                {
+                    if (debugapply) { cout << "Updating position: YES\n"; }
+                    moveFile(*f, blockPos, debugapply);
+                }
+                else
+                {
+                    if (debugapply) {
+                        cout << "Updating position: NO\n";
+                        cout << "Breaking loop due to gap / file crossover\n";
+                    }
+                    // Since every gap is guaranteed to be filled and we are working backwards
+                    // through the files, we also know that if a file is not moved then
+                    // we have reached the crossing point and can exit the for loop early
+                    break;
+                }
+            }
+            else {
+                // Ran out of gaps
+                if (debugapply) {
+                    cout << "There are no more available gaps in the gap queue to query, breaking loop\n";
+                }
+                break;
+            }
         }
         else {
-            if (debugapply) { cout << "Updating position: NO\n"; }
+            // General solution
+            // Find first available space big enough
+            blockPos = findAndUpdateFirstEmptyBlock(f->length, f->startingPos);
+            if (debugapply) {
+                cout << "First possible space large enough (if any) at pos " << blockPos << endl;
+            }
+            // Is it better than our current space? Update if so
+            if (blockPos != -1 && blockPos < f->startingPos) {
+                if (debugapply) { cout << "Updating position: YES\n"; }
+                moveFile(*f, blockPos, debugapply);
+            }
+            else {
+                if (debugapply) { cout << "Updating position: NO\n"; }
+            }
         }
     }
     // Checksum

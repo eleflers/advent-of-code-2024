@@ -26,6 +26,21 @@ namespace AOC
             // Call recursively on any children
             childStones.ForEach(x => x.Blink());
 
+            List<long> result = SimulateBlink(engraving);
+
+            if (result.Count == 1)
+            {
+                engraving = result[0];
+            }
+            else
+            {
+                childStones.Add(new Stone(result[0]));
+                engraving = result[1];
+            }
+        }
+        // Simulate a blink without actually making stone objects recursively
+        public static List<long> SimulateBlink(long engraving)
+        {
             // "The rules" are applied every time we blink...
             // 1st applicable rule applied
             // - engr. == 0 -> 1
@@ -39,7 +54,7 @@ namespace AOC
             if (engraving == 0)
             {
                 // 0 -> 1
-                engraving = 1;
+                return new List<long>(){1};
                 //Console.WriteLine("{0}", 1);
             }
             else if (noDigits % 2 == 0)
@@ -56,15 +71,73 @@ namespace AOC
                 //Console.WriteLine("Calculated left no = {0}, right no = {1}", leftStone, rightStone);
 
                 // Make a child stone obj. to track the stone on the left
-                childStones.Add(new Stone(leftStone));
-                engraving = rightStone;
+                return new List<long>(){leftStone, rightStone};
                 //Console.WriteLine("{0} & {1}", leftStone, rightStone);
             }
             else
             {
-                engraving *= 2024;
+                return new List<long>(){engraving * 2024};
                 //Console.WriteLine("{0}", engraving);
             }
+        }
+    }
+    public class StoneLine
+    {
+        // Dictionary of the number engraved on a stone, to the number of times it occurs in the line
+        public Dictionary<long,long> Stones = new Dictionary<long, long>();
+        public long StoneCount
+        {
+            get => Stones.Sum(x => x.Value);
+        }
+        public StoneLine(List<int> startingNumbers)
+        {
+            foreach (var s in startingNumbers)
+            {
+                if (Stones.ContainsKey(s))
+                {
+                    Stones[s] += 1;
+                }
+                else
+                {
+                    Stones.Add(s, 1);
+                }
+            }
+        }
+        public void Blink(int blinkcount)
+        {
+            for (int i = 0; i < blinkcount; i++)
+            {
+                if (i+1 % 10 == 0)
+                {
+                    Console.WriteLine("Blink {0}/{1}", i+1, blinkcount);
+                }
+                Blink();
+            }
+        }
+        public void Blink()
+        {
+            // Make a new dictionary and swap over, so we aren't confusing stone counts from
+            // before and after blink in case they collide
+            Dictionary<long,long> result = new Dictionary<long, long>();
+            long count;
+            foreach (long engr in Stones.Keys)
+            {
+                count = Stones[engr];
+                var after = Stone.SimulateBlink(engr);
+                foreach (long newEngr in after)
+                {
+                    if (result.ContainsKey(newEngr))
+                    {
+                        result[newEngr] += count;
+                    }
+                    else
+                    {
+                        result.Add(newEngr, count);
+                    }
+                }
+            }
+            // Swap
+            Stones = result;
         }
     }
     public class Program
@@ -112,6 +185,7 @@ namespace AOC
             String? line;
             int lineNr = 0;
             List<Stone> stones = new List<Stone>();
+            StoneLine stoneline = null;
             using (var streamReader = new StreamReader(filename))
             {
                 while ((line = streamReader.ReadLine()) != null && (!debugmode || lineNr < debuglimit))
@@ -121,8 +195,10 @@ namespace AOC
                     }
 
                     // Parse input numbers, delimited by spaces
+                    Console.WriteLine("Parsing input...");
                     List<int> numbers = line.Split(' ').ToList().Select(x => int.Parse(x)).ToList<int>();
                     stones = numbers.Select(x => new Stone(x)).ToList();
+                    stoneline = new StoneLine(numbers); // Part 2 optimisations
                     Console.WriteLine("Starting with {0} stones", stones.Count);
 
                     lineNr++;
@@ -133,6 +209,7 @@ namespace AOC
             // Run iterations of the rules on stones
             int blinks = 25;
             //int blinks = 6;
+            Console.WriteLine("Start Part 1, {0} iterations...", blinks);
             for (int i = 0; i < blinks; i++)
             {
                 if (debugmode)
@@ -147,16 +224,23 @@ namespace AOC
             }
             sum = stones.Sum(x => x.StoneCount);
 
+            // For part 2, blinks 75, we need to be a little smarter
+            blinks = 75;
+            Console.WriteLine("Start Part 2, {0} iterations...", blinks);
+            stoneline.Blink(blinks);
+            long sumP2 = stoneline.StoneCount;
+
             // Output
             Console.WriteLine("--");
-            Console.WriteLine("Number of stones = {0}", sum);
-            if (sum == 55312)
+            Console.WriteLine("P1 number of stones = {0}", sum);
+            Console.WriteLine("P2 number of stones = {0}", sumP2);
+            if (sum == 55312 || sum == 216996)
             {
-                Console.WriteLine("Answer matches example expected answer");
+                Console.WriteLine("P1 answer matches example expected answer");
             }
             else
             {
-                Console.WriteLine("Answer does not match example expected answer");
+                Console.WriteLine("P1 answer does not match example expected answer");
             }
 
             Console.WriteLine("--\nEnd.");

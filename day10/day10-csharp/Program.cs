@@ -32,7 +32,7 @@ namespace AOC
     {
         public int startX;
         public int startY;
-        private int paths = 0;
+        private int rating = 0;
         private int score = 0;
         private bool hasBeenWalked = false;
         private TopMap map;
@@ -44,6 +44,14 @@ namespace AOC
             this.startY = y;
             this.map = map;
         }
+        public int GetTrailRating()
+        {
+            if (!hasBeenWalked)
+            {
+                GetTrailScore(); // Call P1 code
+            }
+            return rating;
+        }
         public int GetTrailScore()
         {
             if (hasBeenWalked)
@@ -54,7 +62,7 @@ namespace AOC
             {
                 // Walk all possible paths that increase in height by 1 each step
                 int startingHeight = 0;
-                paths = WalkTrail(startX, startY, startingHeight);
+                rating = WalkTrail(startX, startY, startingHeight);
                 hasBeenWalked = true;
                 // The score is actually not the no. of paths found, because multiple can
                 // converge on the same 9
@@ -136,6 +144,7 @@ namespace AOC
 
             // Variables for output
             long sum = 0;
+            long ratingSum = 0;
 
             // Read file
             String? line;
@@ -192,16 +201,19 @@ namespace AOC
                     Console.WriteLine("Following trail at [{0},{1}]", th.startX, th.startY);
                 }
                 sum += th.GetTrailScore();
+                ratingSum += th.GetTrailRating();
                 if (debugmode)
                 {
                     Console.WriteLine("It returned score: {0}", th.GetTrailScore());
+                    Console.WriteLine("It returned rating: {0}", th.GetTrailRating());
                 }
             }
 
             // Output
             Console.WriteLine("--");
-            Console.WriteLine("Sum = {0}", sum);
-            if (sum == 36)
+            Console.WriteLine("Sum of Trail Scores (P1) = {0}", sum);
+            Console.WriteLine("Sum of Trail Ratings (P2) = {0}", ratingSum);
+            if (sum == 36 && ratingSum == 81)
             {
                 Console.WriteLine("Answer matches example expected answer");
             }

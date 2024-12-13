@@ -103,8 +103,7 @@ namespace AOC
             Console.WriteLine("--\nAoC Day 10\n--");
             // For testing
             int debuglimit = 10;
-            int debug = 0;
-            bool debugapply = false;
+            bool debugmode = false;
 
             // User args
             List<string> argv = args.ToList();
@@ -123,14 +122,14 @@ namespace AOC
                 Console.WriteLine("Reading 2nd input param\n    -d / --debug for debug printing");
                 if (argv[1] == "-d" || argv[1] == "--debug")
                 {
-                    debugapply = true;
+                    debugmode = true;
                 }
                 else
                 {
-                    debugapply = false;
+                    debugmode = false;
                 }
             }
-            if (debugapply)
+            if (debugmode)
             {
                 Console.WriteLine("--\nDEBUG MODE : ON\nLINE LIMIT : {0}", debuglimit);
             }
@@ -145,10 +144,9 @@ namespace AOC
             int invalidPoints = 0;
             using (var streamReader = new StreamReader(filename))
             {
-                while ((line = streamReader.ReadLine()) != null && (!debugapply || debug < debuglimit))
+                while ((line = streamReader.ReadLine()) != null && (!debugmode || lineNr < debuglimit))
                 {
-                    debug++;
-                    if (debugapply) {
+                    if (debugmode) {
                         Console.WriteLine(line);
                     }
 
@@ -182,19 +180,19 @@ namespace AOC
             }
 
             // Processing
-            if (debugapply)
+            if (debugmode)
             {
                 Console.WriteLine("Found {0} trailheads to investigate", tm.trailheads.Count());
                 Console.WriteLine("X Y bounds of map = [{0},{1}]", tm.SizeX, tm.SizeY);
             }
             foreach (var th in tm.trailheads)
             {
-                if (debugapply)
+                if (debugmode)
                 {
                     Console.WriteLine("Following trail at [{0},{1}]", th.startX, th.startY);
                 }
                 sum += th.GetTrailScore();
-                if (debugapply)
+                if (debugmode)
                 {
                     Console.WriteLine("It returned score: {0}", th.GetTrailScore());
                 }
@@ -216,8 +214,5 @@ namespace AOC
             return 0;
         }
     }
-
-
-
 }
 

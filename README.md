@@ -40,6 +40,25 @@ cd day1/
 g++ day1.cc -std=c++2b -Wall && ./a.out
 ```
 
+## C#
+
+Create new C# console app in sub-dir for a day. This will create a subdir.
+of the same name so cd to where you want this to happen
+
+```
+dotnet new console -n dayX
+# Or if adding a C# port of an existing C++ solution and in that day's dir. already
+dotnet new console -n dayX-csharp
+```
+
+Add the newly created C# project to the top level `.sln` file for vscode functionality
+
+```
+dotnet sln advent-of-code-2024.sln add day10/day10-csharp/day10-csharp.csproj
+```
+
+It might be better to have a single executable and specify the day to run at run-time
+
 ## General Helpers
 
 ### Performance Metrics

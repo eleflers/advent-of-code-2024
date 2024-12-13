@@ -32,16 +32,17 @@ namespace AOC
     {
         public int startX;
         public int startY;
-        private int score;
-        private bool hasBeenWalked;
+        private int paths = 0;
+        private int score = 0;
+        private bool hasBeenWalked = false;
         private TopMap map;
+        // Named Tuples, C# 7.0
+        private List<(int x, int y)> summits = new List<(int x, int y)>();
         public TrailHead(int x, int y, TopMap map)
         {
             this.startX = x;
             this.startY = y;
             this.map = map;
-            this.score = 0;
-            this.hasBeenWalked = false;
         }
         public int GetTrailScore()
         {
@@ -51,9 +52,14 @@ namespace AOC
             }
             else
             {
+                // Walk all possible paths that increase in height by 1 each step
                 int startingHeight = 0;
-                score = WalkTrail(startX, startY, startingHeight);
+                paths = WalkTrail(startX, startY, startingHeight);
                 hasBeenWalked = true;
+                // The score is actually not the no. of paths found, because multiple can
+                // converge on the same 9
+                // Find count of unique summit coord instead
+                int score = summits.Distinct().Count();
                 return score;
             }
         }
@@ -67,6 +73,8 @@ namespace AOC
                 if (h == 9)
                 {
                     // We found a 9!
+                    // Log it in our list of named tuples, because we can arrive at the same 9 via multiple paths
+                    summits.Add((x: x, y: y));
                     return 1;
                 }
                 else
@@ -137,7 +145,7 @@ namespace AOC
             int invalidPoints = 0;
             using (var streamReader = new StreamReader(filename))
             {
-                while (debug < debuglimit && (line = streamReader.ReadLine()) != null)
+                while ((line = streamReader.ReadLine()) != null && (!debugapply || debug < debuglimit))
                 {
                     debug++;
                     if (debugapply) {
@@ -174,17 +182,26 @@ namespace AOC
             }
 
             // Processing
-            Console.WriteLine("Found {0} trailheads to investigate", tm.trailheads.Count());
-            Console.WriteLine("X Y bounds of map = [{0},{1}]", tm.SizeX, tm.SizeY);
+            if (debugapply)
+            {
+                Console.WriteLine("Found {0} trailheads to investigate", tm.trailheads.Count());
+                Console.WriteLine("X Y bounds of map = [{0},{1}]", tm.SizeX, tm.SizeY);
+            }
             foreach (var th in tm.trailheads)
             {
-                Console.WriteLine("Following trail at [{0},{1}]", th.startX, th.startY);
+                if (debugapply)
+                {
+                    Console.WriteLine("Following trail at [{0},{1}]", th.startX, th.startY);
+                }
                 sum += th.GetTrailScore();
-                Console.WriteLine("It returned score: {0}", th.GetTrailScore());
+                if (debugapply)
+                {
+                    Console.WriteLine("It returned score: {0}", th.GetTrailScore());
+                }
             }
 
             // Output
-            Console.WriteLine("--\n");
+            Console.WriteLine("--");
             Console.WriteLine("Sum = {0}", sum);
             if (sum == 36)
             {

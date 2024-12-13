@@ -23,6 +23,9 @@ namespace AOC
         }
         public void Blink()
         {
+            // Call recursively on any children
+            childStones.ForEach(x => x.Blink());
+
             // "The rules" are applied every time we blink...
             // 1st applicable rule applied
             // - engr. == 0 -> 1
@@ -32,10 +35,12 @@ namespace AOC
             //     - (Ignore leading 0s, 1000 -> 10,0)
             // - engr. -> engr. * 2024
             int noDigits = (int)Math.Floor(Math.Log10(engraving)) + 1;
+            //Console.Write("Stone {0} -> ", engraving);
             if (engraving == 0)
             {
                 // 0 -> 1
                 engraving = 1;
+                //Console.WriteLine("{0}", 1);
             }
             else if (noDigits % 2 == 0)
             {
@@ -53,14 +58,13 @@ namespace AOC
                 // Make a child stone obj. to track the stone on the left
                 childStones.Add(new Stone(leftStone));
                 engraving = rightStone;
+                //Console.WriteLine("{0} & {1}", leftStone, rightStone);
             }
             else
             {
                 engraving *= 2024;
+                //Console.WriteLine("{0}", engraving);
             }
-
-            // Call recursively on any children
-            childStones.ForEach(x => x.Blink());
         }
     }
     public class Program
@@ -126,14 +130,20 @@ namespace AOC
             }
 
             // Processing
-            if (debugmode)
-            {
-            }
             // Run iterations of the rules on stones
             int blinks = 25;
+            //int blinks = 6;
             for (int i = 0; i < blinks; i++)
             {
+                if (debugmode)
+                {
+                    Console.WriteLine("About to apply blink {0} to all stones...", i+1);
+                }
                 stones.ForEach(x => x.Blink());
+                if (debugmode)
+                {
+                    Console.WriteLine("After {0} blinks, there are {1} stones\n--", i+1, stones.Sum(x => x.StoneCount));
+                }
             }
             sum = stones.Sum(x => x.StoneCount);
 

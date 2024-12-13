@@ -7,19 +7,19 @@ namespace AOC
     public class Stone
     {
         private long engraving;
-        // Recursively keep track of any child stones on the right, should this one split
-        private Stone? childStone = null;
+        // Recursively keep track of any child stones on the left, should this one split
+        private List<Stone> childStones = new List<Stone>();
         public Stone(long initialEngraving)
         {
             engraving = initialEngraving;
         }
         public long EngravingSum
         {
-            get => engraving + (childStone != null ? childStone.engraving : 0);
+            get => engraving + childStones.Sum(x => x.EngravingSum);
         }
         public int StoneCount
         {
-            get => 1 + (childStone != null ? childStone.StoneCount : 0);
+            get => 1 + childStones.Sum(x => x.StoneCount);
         }
         public void Blink()
         {
@@ -50,9 +50,9 @@ namespace AOC
 
                 //Console.WriteLine("Calculated left no = {0}, right no = {1}", leftStone, rightStone);
 
-                // Make a child stone obj. to track the stone on the right
-                engraving = leftStone;
-                childStone = new Stone(rightStone);
+                // Make a child stone obj. to track the stone on the left
+                childStones.Add(new Stone(leftStone));
+                engraving = rightStone;
             }
             else
             {
@@ -60,10 +60,7 @@ namespace AOC
             }
 
             // Call recursively on any children
-            if (childStone != null)
-            {
-                childStone.Blink();
-            }
+            childStones.ForEach(x => x.Blink());
         }
     }
     public class Program
@@ -136,17 +133,14 @@ namespace AOC
             int blinks = 25;
             for (int i = 0; i < blinks; i++)
             {
-                foreach (var s in stones)
-                {
-                    s.Blink();
-                }
+                stones.ForEach(x => x.Blink());
             }
-            int ans = stones.Sum(x => x.StoneCount);
+            sum = stones.Sum(x => x.StoneCount);
 
             // Output
             Console.WriteLine("--");
-            Console.WriteLine("Number of stones = {0}", ans);
-            if (ans == 55312)
+            Console.WriteLine("Number of stones = {0}", sum);
+            if (sum == 55312)
             {
                 Console.WriteLine("Answer matches example expected answer");
             }

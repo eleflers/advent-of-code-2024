@@ -24,6 +24,10 @@ namespace AOC
         {
             get => regions.Sum(x => x.FenceCost);
         }
+        public long FenceCostP2
+        {
+            get => regions.Sum(x => x.FenceCostP2);
+        }
         public void AddRow(string line)
         {
             map.Add(line.ToList<char>());
@@ -89,6 +93,122 @@ namespace AOC
             }
         }
     }
+    public enum Direction 
+    {
+        North,
+        South,
+        East,
+        West
+    }
+    public class FenceSide
+    {
+        // If east or west facing fence, key is x pos. value is y
+        private Dictionary<int, SortedSet<int>> lines = new Dictionary<int, SortedSet<int>>();
+        private bool isEastOrWestFacing;
+        public int LineCount
+        {
+            get
+            {
+                // Coord 1 is x/y and coord 2 is y/x
+                // If same coord 1 and coord 2 is adjacent then the fence is part of the same line
+                int separateLines = 0;
+                foreach (var l in lines.Values)
+                {
+                    // Sorted set of coord 2, 'l'
+                    // How many contiguous runs are there? Add that many onto total
+                    int prev = l.First();
+                    // Starts with at least 1
+                    separateLines++;
+                    if (l.Count > 1)
+                    {
+                        // Loop remainder checking for gaps, any gap is +1 to the total
+                        for (int i = 1; i < l.Count; i++)
+                        {
+                            if (l.ElementAt(i) - prev > 1)
+                            {
+                                // Gap, so add 1
+                                separateLines++;
+                            }
+                            prev = l.ElementAt(i);
+                        }
+                    }
+                }
+                return separateLines;
+            }
+        }
+        public void AddFence(int x, int y)
+        {
+            if (isEastOrWestFacing)
+            {
+                // Key is x coord.
+                if (lines.ContainsKey(x))
+                {
+                    lines[x].Add(y);
+                }
+                else
+                {
+                    lines.Add(x, new SortedSet<int>(){ y });
+                }
+            }
+            else
+            {
+                // Key is y coord.
+                if (lines.ContainsKey(y))
+                {
+                    lines[y].Add(x);
+                }
+                else
+                {
+                    lines.Add(y, new SortedSet<int>(){ x });
+                }
+            }
+        }
+        public FenceSide(bool isEastOrWestFacing)
+        {
+            this.isEastOrWestFacing = isEastOrWestFacing;
+        }
+    }
+    public class Fencing
+    {
+        private FenceSide northFences = new FenceSide(false);
+        private FenceSide southFences = new FenceSide(false);
+        private FenceSide eastFences = new FenceSide(true);
+        private FenceSide westFences = new FenceSide(true);
+        public int StraightSideCount
+        {
+            get => northFences.LineCount + southFences.LineCount + eastFences.LineCount + westFences.LineCount;
+        }
+        public Fencing()
+        {
+        }
+        public void AddFence(int x, int y, Direction d)
+        {
+            switch (d)
+            {
+                case Direction.North:
+                {
+                    northFences.AddFence(x, y);
+                    break;
+                }
+                case Direction.South:
+                {
+                    southFences.AddFence(x, y);
+                    break;
+                }
+                case Direction.East:
+                {
+                    eastFences.AddFence(x, y);
+                    break;
+                }
+                case Direction.West:
+                {
+                    westFences.AddFence(x, y);
+                    break;
+                }
+                default: break;
+            }
+        }
+    }
     public class Region
     {
         private GardenMap garden;
@@ -97,10 +217,16 @@ namespace AOC
         private char plant;
         private int area = 0;
         private int perimeter = 0;
+        private Fencing fences = new Fencing();
         private Dictionary<int,HashSet<int>> coords = new Dictionary<int, HashSet<int>>();
         public int FenceCost
         {
             get => area * perimeter;
+        }
+        public int FenceCostP2
+        {
+            // Part 2, fence cost is now area * number of distinct straight sides
+            get => area * fences.StraightSideCount;
         }
         public Region(int startX, int startY, GardenMap garden)
         {
@@ -143,7 +269,33 @@ namespace AOC
 
                 // Count what we have around this position
                 area++;
-                perimeter += 4 - garden.CountPlantAtCoord(coords, plant);
+                int surroundingArea = garden.CountPlantAtCoord(coords, plant);
+                perimeter += 4 - surroundingArea;
+                // Find out where the fences were if any
+                if (surroundingArea > 0 && garden.CountPlantAtCoord(x  , y+1, plant) == 1)
+                {
+                    // North
+                    fences.AddFence(x  , y+1, Direction.North);
+                    surroundingArea--;
+                }
+                if (surroundingArea > 0 && garden.CountPlantAtCoord(x  , y-1, plant) == 1)
+                {
+                    // South
+                    fences.AddFence(x  , y-1, Direction.South);
+                    surroundingArea--;
+                }
+                if (surroundingArea > 0 && garden.CountPlantAtCoord(x+1, y  , plant) == 1)
+                {
+                    // East
+                    fences.AddFence(x+1, y  , Direction.East);
+                    surroundingArea--;
+                }
+                if (surroundingArea > 0 && garden.CountPlantAtCoord(x-1, y  , plant) == 1)
+                {
+                    // West
+                    fences.AddFence(x-1, y  , Direction.West);
+                    surroundingArea--;
+                }
 
                 // Log where we've been
                 AddMappedCoord(x, y);
@@ -242,10 +394,13 @@ namespace AOC
             // Scan garden
             garden.ScanGarden();
             sum = garden.FenceCost;
+            long sumP2 = garden.FenceCostP2;
 
             // Output
+            // P2 1365986 too high
             Console.WriteLine("--");
             Console.WriteLine("Fence Cost (P1) = £{0}.00", sum);
+            Console.WriteLine("Fence Cost (P2) = £{0}.00", sumP2);
             if (sum == 140 || sum == 772 || sum == 1930)
             {
                 Console.WriteLine("Answer matches example expected answer");

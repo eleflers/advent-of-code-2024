@@ -148,6 +148,7 @@ namespace AOC
             // For testing
             int debuglimit = 1;
             bool debugmode = false;
+            bool disableP1 = true;
 
             // User args
             List<string> argv = args.ToList();
@@ -197,7 +198,11 @@ namespace AOC
                     // Parse input numbers, delimited by spaces
                     Console.WriteLine("Parsing input...");
                     List<int> numbers = line.Split(' ').ToList().Select(x => int.Parse(x)).ToList<int>();
-                    stones = numbers.Select(x => new Stone(x)).ToList();
+                    if (!disableP1)
+                    {
+                        // For large test data don't bother with part 1 method
+                        stones = numbers.Select(x => new Stone(x)).ToList();
+                    }
                     stoneline = new StoneLine(numbers); // Part 2 optimisations
                     Console.WriteLine("Starting with {0} stones", stones.Count);
 
@@ -208,21 +213,23 @@ namespace AOC
             // Processing
             // Run iterations of the rules on stones
             int blinks = 25;
-            //int blinks = 6;
-            Console.WriteLine("Start Part 1, {0} iterations...", blinks);
-            for (int i = 0; i < blinks; i++)
+            if (!disableP1)
             {
-                if (debugmode)
+                Console.WriteLine("Start Part 1, {0} iterations...", blinks);
+                for (int i = 0; i < blinks; i++)
                 {
-                    Console.WriteLine("About to apply blink {0} to all stones...", i+1);
+                    if (debugmode)
+                    {
+                        Console.WriteLine("About to apply blink {0} to all stones...", i+1);
+                    }
+                    stones.ForEach(x => x.Blink());
+                    if (debugmode)
+                    {
+                        Console.WriteLine("After {0} blinks, there are {1} stones\n--", i+1, stones.Sum(x => x.StoneCount));
+                    }
                 }
-                stones.ForEach(x => x.Blink());
-                if (debugmode)
-                {
-                    Console.WriteLine("After {0} blinks, there are {1} stones\n--", i+1, stones.Sum(x => x.StoneCount));
-                }
+                sum = stones.Sum(x => x.StoneCount);
             }
-            sum = stones.Sum(x => x.StoneCount);
 
             // For part 2, blinks 75, we need to be a little smarter
             blinks = 75;

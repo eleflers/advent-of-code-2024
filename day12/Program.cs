@@ -6,11 +6,10 @@ namespace AOC
     public class GardenMap
     {
         private List<List<char>> map = new List<List<char>>();
-        public Dictionary<char,long> PlantAreas = new Dictionary<char,long>();
-        public Dictionary<char,long> PlantPerimeters = new Dictionary<char,long>();
-        public long FenceCost
+        private List<Region> regions = new List<Region>();
+        private Dictionary<int,HashSet<int>> mappedCoords = new Dictionary<int, HashSet<int>>();
+        public GardenMap()
         {
-            get => PlantAreas.Keys.Sum(x => PlantAreas[x] * PlantPerimeters[x]);
         }
         public int sizeX
         {
@@ -20,12 +19,29 @@ namespace AOC
         {
             get => map.Count;
         }
-        public GardenMap()
+        public long FenceCost
         {
+            get => regions.Sum(x => x.FenceCost);
         }
         public void AddRow(string line)
         {
             map.Add(line.ToList<char>());
+        }
+        // Log a coord. as having been mapped already
+        public void AddMappedCoord(int x, int y)
+        {
+            if (!mappedCoords.ContainsKey(x))
+            {
+                mappedCoords.Add(x, new HashSet<int>(y));
+            }
+            else
+            {
+                mappedCoords[x].Add(y);
+            }
+        }
+        public bool IsMappedCoord(int x, int y)
+        {
+            return mappedCoords.ContainsKey(x) && mappedCoords[x].Contains(y);
         }
         public char GetPlantAtCoord(int x, int y)
         {
@@ -55,56 +71,71 @@ namespace AOC
             {
                 for (int j = 0; j < sizeY; j++)
                 {
-                    ScanGarden(i, j);
+                    // Scan and make regions
+                    // Check coord already visited so we don't hit a region again
+                    if (!IsMappedCoord(i, j))
+                    {
+                        Region r = new Region(i, j, this);
+                        regions.Add(r);
+                        r.WalkRegion();
+                    }
+                    
                 }
-            }
-        }
-        public void ScanGarden(int x, int y)
-        {
-            char plant = GetPlantAtCoord(x, y);
-            // How many squares do we border that contain the same plant
-            List<(int x, int y)> coords = new List<(int x, int y)>()
-            {
-                (x: x - 1, y: y    ),
-                (x: x + 1, y: y    ),
-                (x: x,     y: y - 1),
-                (x: x,     y: y + 1),
-            };
-            int sameRegionBorders = CountPlantAtCoord(coords, plant);
-
-            // Update dictionaries
-            // Area = how many squares of this plant type
-            if (PlantAreas.ContainsKey(plant))
-            {
-                PlantAreas[plant] += 1;
-            }
-            else
-            {
-                PlantAreas.Add(plant, 1);
-            }
-            // Perimeter = how many cells do we border that AREN'T the same as us
-            // e.g. all 4 shared = 4 - 4 = 0, 1 shared = 4-1 = 3
-            if (PlantPerimeters.ContainsKey(plant))
-            {
-                PlantPerimeters[plant] += 4-sameRegionBorders;
-            }
-            else
-            {
-                PlantPerimeters.Add(plant, 4-sameRegionBorders);
             }
         }
     }
     public class Region
     {
+        private GardenMap garden;
         private int startX;
         private int startY;
         private char plant;
         private int area = 0;
         private int perimeter = 0;
-        public Region(int startingX, int startingY, char plant)
+        public int FenceCost
         {
-            this.startX = startingX;
-            this.startY = startingY;
+            get => area * perimeter;
+        }
+        public Region(int startX, int startY, GardenMap garden)
+        {
+            this.startX = startX;
+            this.startY = startY;
+            this.garden = garden;
+            this.plant = garden.GetPlantAtCoord(startX, startY);
+        }
+        public void WalkRegion()
+        {
+            WalkRegion(startX, startY);
+        }
+        private void WalkRegion(int x, int y)
+        {
+            if (garden.CountPlantAtCoord(x, y, plant) == 1)
+            {
+                // Neighbouring coords
+                List<(int x, int y)> coords = new List<(int x, int y)>()
+                {
+                    (x: x - 1, y: y    ),
+                    (x: x + 1, y: y    ),
+                    (x: x,     y: y - 1),
+                    (x: x,     y: y + 1),
+                };
+
+                // Count what we have around this position
+                area++;
+                perimeter += 4 - garden.CountPlantAtCoord(coords, plant);
+
+                // Log where we've been
+                garden.AddMappedCoord(x, y);
+
+                // Recursively go in all 4 directions, except those we've already visited
+                foreach (var c in coords)
+                {
+                    if (!garden.IsMappedCoord(c.x, c.y))
+                    {
+                        WalkRegion(c.x, c.y);
+                    }
+                }
+            }
         }
     }
     public class Program

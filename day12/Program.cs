@@ -37,7 +37,7 @@ namespace AOC
         {
             if (!mappedCoords.ContainsKey(x))
             {
-                mappedCoords.Add(x, new HashSet<int>(){y});
+                mappedCoords.Add(x, new HashSet<int>(){ y });
             }
             else
             {
@@ -219,11 +219,11 @@ namespace AOC
         private int perimeter = 0;
         private Fencing fences = new Fencing();
         private Dictionary<int,HashSet<int>> coords = new Dictionary<int, HashSet<int>>();
-        public int FenceCost
+        public long FenceCost
         {
             get => area * perimeter;
         }
-        public int FenceCostP2
+        public long FenceCostP2
         {
             // Part 2, fence cost is now area * number of distinct straight sides
             get => area * fences.StraightSideCount;
@@ -258,8 +258,7 @@ namespace AOC
             if (garden.CountPlantAtCoord(x, y, plant) == 1)
             {
                 //Console.WriteLine("Walk found x:{0} y:{1}", x, y);
-                // Neighbouring coords
-                List<(int x, int y)> coords = new List<(int x, int y)>()
+                List<(int x, int y)> neighbouringCoords = new List<(int x, int y)>()
                 {
                     (x: x - 1, y: y    ),
                     (x: x + 1, y: y    ),
@@ -269,39 +268,39 @@ namespace AOC
 
                 // Count what we have around this position
                 area++;
-                int surroundingArea = garden.CountPlantAtCoord(coords, plant);
-                perimeter += 4 - surroundingArea;
+                int surroundingFences = 4 - garden.CountPlantAtCoord(neighbouringCoords, plant);
+                perimeter += surroundingFences;
                 // Find out where the fences were if any
-                if (surroundingArea > 0 && garden.CountPlantAtCoord(x  , y+1, plant) == 1)
+                if (surroundingFences > 0 && garden.CountPlantAtCoord(x  , y+1, plant) != 1)
                 {
                     // North
                     fences.AddFence(x  , y+1, Direction.North);
-                    surroundingArea--;
+                    surroundingFences--;
                 }
-                if (surroundingArea > 0 && garden.CountPlantAtCoord(x  , y-1, plant) == 1)
+                if (surroundingFences > 0 && garden.CountPlantAtCoord(x  , y-1, plant) != 1)
                 {
                     // South
                     fences.AddFence(x  , y-1, Direction.South);
-                    surroundingArea--;
+                    surroundingFences--;
                 }
-                if (surroundingArea > 0 && garden.CountPlantAtCoord(x+1, y  , plant) == 1)
+                if (surroundingFences > 0 && garden.CountPlantAtCoord(x+1, y  , plant) != 1)
                 {
                     // East
                     fences.AddFence(x+1, y  , Direction.East);
-                    surroundingArea--;
+                    surroundingFences--;
                 }
-                if (surroundingArea > 0 && garden.CountPlantAtCoord(x-1, y  , plant) == 1)
+                if (surroundingFences > 0 && garden.CountPlantAtCoord(x-1, y  , plant) != 1)
                 {
                     // West
                     fences.AddFence(x-1, y  , Direction.West);
-                    surroundingArea--;
+                    surroundingFences--;
                 }
 
                 // Log where we've been
                 AddMappedCoord(x, y);
 
                 // Recursively go in all 4 directions, except those we've already visited
-                foreach (var c in coords)
+                foreach (var c in neighbouringCoords)
                 {
                     if (!IsMappedCoord(c.x, c.y))
                     {
@@ -315,7 +314,7 @@ namespace AOC
         {
             if (!coords.ContainsKey(x))
             {
-                coords.Add(x, new HashSet<int>(){y});
+                coords.Add(x, new HashSet<int>(){ y });
             }
             else
             {

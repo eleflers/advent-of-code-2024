@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.IO;
+using System.Runtime.CompilerServices;
 
 namespace AOC
 {
@@ -7,7 +8,7 @@ namespace AOC
     {
         private List<List<char>> map = new List<List<char>>();
         private List<Region> regions = new List<Region>();
-        private Dictionary<int,HashSet<int>> mappedCoords = new Dictionary<int, HashSet<int>>();
+        private Dictionary<int,HashSet<int>> mappedCoords = new Dictionary<int,HashSet<int>>();
         public GardenMap()
         {
         }
@@ -32,7 +33,7 @@ namespace AOC
         {
             if (!mappedCoords.ContainsKey(x))
             {
-                mappedCoords.Add(x, new HashSet<int>(y));
+                mappedCoords.Add(x, new HashSet<int>(){y});
             }
             else
             {
@@ -77,7 +78,11 @@ namespace AOC
                     {
                         Region r = new Region(i, j, this);
                         regions.Add(r);
-                        r.WalkRegion();
+                        var coord = r.WalkRegion();
+                        foreach (var c in coord)
+                        {
+                            AddMappedCoord(c.x, c.y);
+                        }
                     }
                     
                 }
@@ -92,6 +97,7 @@ namespace AOC
         private char plant;
         private int area = 0;
         private int perimeter = 0;
+        private Dictionary<int,HashSet<int>> coords = new Dictionary<int, HashSet<int>>();
         public int FenceCost
         {
             get => area * perimeter;
@@ -102,15 +108,30 @@ namespace AOC
             this.startY = startY;
             this.garden = garden;
             this.plant = garden.GetPlantAtCoord(startX, startY);
+            //Console.WriteLine("Made region for plant {0} at x:{1} y:{2}", plant, startX, startY);
         }
-        public void WalkRegion()
+        public List<(int x, int y)> WalkRegion()
         {
+            //Console.WriteLine("Begin walking region for plant {0} at x:{1} y:{2}", plant, startX, startY);
+            // Method is recursive
             WalkRegion(startX, startY);
+            //Console.WriteLine("Done. Area = {0} Perimeter = {1}", area, perimeter);
+            // Convert to a named tuple to output coords
+            List<(int x, int y)> c = new List<(int x, int y)>();
+            foreach (var x in coords.Keys)
+            {
+                foreach (var y in coords[x])
+                {
+                    c.Add((x, y));
+                }
+            }
+            return c;
         }
         private void WalkRegion(int x, int y)
         {
             if (garden.CountPlantAtCoord(x, y, plant) == 1)
             {
+                //Console.WriteLine("Walk found x:{0} y:{1}", x, y);
                 // Neighbouring coords
                 List<(int x, int y)> coords = new List<(int x, int y)>()
                 {
@@ -125,17 +146,33 @@ namespace AOC
                 perimeter += 4 - garden.CountPlantAtCoord(coords, plant);
 
                 // Log where we've been
-                garden.AddMappedCoord(x, y);
+                AddMappedCoord(x, y);
 
                 // Recursively go in all 4 directions, except those we've already visited
                 foreach (var c in coords)
                 {
-                    if (!garden.IsMappedCoord(c.x, c.y))
+                    if (!IsMappedCoord(c.x, c.y))
                     {
                         WalkRegion(c.x, c.y);
                     }
                 }
             }
+        }
+        // Log a coord. as having been mapped already
+        private void AddMappedCoord(int x, int y)
+        {
+            if (!coords.ContainsKey(x))
+            {
+                coords.Add(x, new HashSet<int>(){y});
+            }
+            else
+            {
+                coords[x].Add(y);
+            }
+        }
+        private bool IsMappedCoord(int x, int y)
+        {
+            return coords.ContainsKey(x) && coords[x].Contains(y);
         }
     }
     public class Program

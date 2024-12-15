@@ -6,17 +6,17 @@ namespace AOC
     public class ClawMachine
     {
         // Token costs
-        private int costA = 3;
-        private int costB = 1;
+        private decimal costA = 3;
+        private decimal costB = 1;
         private int Na; // Num A presses
         private int Nb; // Num B presses
         // Problem input
-        public int AX; // X Dist. per A press
-        public int BX; // X Dist. per B press
-        public int CX; // Prize loc. X
-        public int AY; // Y Dist. per A press
-        public int BY; // Y Dist. per B press
-        public int CY; // Prize loc. Y
+        public decimal AX; // X Dist. per A press
+        public decimal BX; // X Dist. per B press
+        public decimal CX; // Prize loc. X
+        public decimal AY; // Y Dist. per A press
+        public decimal BY; // Y Dist. per B press
+        public decimal CY; // Prize loc. Y
         public ClawMachine()
         {
         }
@@ -48,9 +48,9 @@ namespace AOC
                 return;
             }
             // Equation (3)
-            Na = (CY - (BY/BX) * CX) / (AY - (BY/BX) * AX);
+            Na = (int)Math.Round((CY - (BY/BX) * CX) / (AY - (BY/BX) * AX));
             // Equation (1a)
-            Nb = (CX - AX * Na) / BX;
+            Nb = (int)Math.Round((CX - AX * Na) / BX);
 
             // Check for negative results, can't press a button negative times!
             if (Na < 0 || Nb < 0)
@@ -60,7 +60,7 @@ namespace AOC
                 Nb = 0;
             }
 
-            Console.WriteLine("Solved NumA:{0}, NumB:{0}", Na, Nb);
+            Console.WriteLine("Solved NumA:{0}, NumB:{1}", Na, Nb);
 
             // Arbitrarily throw out solutions requiring over 100 presses of a button, because the problem said so
             if (Na > 100 || Nb > 100)
@@ -74,7 +74,7 @@ namespace AOC
         public int PrizeCostTokens()
         {
             Solve();
-            return Na * costA + Nb * costB;
+            return (int)(Na * costA + Nb * costB);
         }
     }
     public class Program

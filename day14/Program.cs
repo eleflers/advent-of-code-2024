@@ -229,7 +229,6 @@ namespace AOC
                 }
             }
 
-            // Clone list so we have a blank slate for P1 and P2
             Bathroom bathroom = new Bathroom(robots);
 
             // Processing

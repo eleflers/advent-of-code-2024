@@ -51,7 +51,8 @@ namespace AOC
             {
                 while ((line = streamReader.ReadLine()) != null && (!debugmode || lineNr < debuglimit))
                 {
-                    if (debugmode) {
+                    if (debugmode)
+                    {
                         Console.WriteLine(line);
                     }
 

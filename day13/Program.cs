@@ -7,8 +7,8 @@ namespace AOC
     public class ClawMachine
     {
         // Token costs
-        private decimal costA = 3;
-        private decimal costB = 1;
+        private int costA = 3;
+        private int costB = 1;
         private int Na; // Num A presses
         private int Nb; // Num B presses
         // Problem input
@@ -31,8 +31,29 @@ namespace AOC
             //     (2) ay.na + by.nb = cy
             //Console.WriteLine("Solving claw machine for prize X:{0}, Y:{1}", CX, CY);
 
-            // TODO: Pre-processing to check parallel lines
-            // If so we need our own bespoke cost logic, if both hit the target
+            // Pre-processing to check parallel lines
+            // If so we need our own bespoke cost logic, if both can hit the target
+            if (CX / AX == CY / AY && CX / BX == CY / BY)
+            {
+                // Both buttons can get there independently
+                // Check to see which costs less
+                Console.WriteLine("Found machine for prize X:{0}, Y:{1} where A and B buttons can both get to the prize independently", CX, CY);
+                // if (AX / costA > BX / costB)
+                if (AX * costB > BX * costA)
+                {
+                    // A is more cost effective
+                    Na = (int)Math.Round(CX / AX);
+                    Nb = 0;
+                }
+                else
+                {
+                    // B is more cost effective
+                    Na = 0;
+                    Nb = (int)Math.Round(CX / BX);
+                }
+                Console.WriteLine("Solved NumA:{0}, NumB:{1}", Na, Nb);
+                return;
+            }
 
             // External matrix linear equation solver, from MathNet.Numerics.LinearAlgebra
             // Solve matrix equation A x = b
@@ -42,6 +63,7 @@ namespace AOC
             });
             var b = Vector<double>.Build.Dense(new double[] {CX, CY});
             var x = A.Solve(b);
+            // TODO: Do we need to check for fractional solutions? We are only interested in integer solutions
             Na = (int)Math.Round(x[0]);
             Nb = (int)Math.Round(x[1]);
 
@@ -83,12 +105,12 @@ namespace AOC
             string filename = "input";
             if (argv.Count == 0)
             {
-                Console.WriteLine("Assume default input file '{0}", filename);
+                Console.WriteLine("Assume default input file '{0}'", filename);
             }
             else if (argv.Count > 0)
             {
                 filename = argv[0];
-                Console.WriteLine("Taking CLI input file name {0}'", filename);
+                Console.WriteLine("Taking CLI input file name '{0}'", filename);
             }
             if (argv.Count > 1)
             {

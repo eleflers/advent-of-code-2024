@@ -1,22 +1,83 @@
 ﻿using System.Diagnostics;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 
 namespace AOC
 {
     public class Robot
     {
-        public int px;
-        public int py;
+        public int x;
+        public int y;
         public int vx;
         public int vy;
+        //private const int sizeX = 11; // Example grid
+        //private const int sizeY = 7; // Example grid
+        private const int sizeX = 101;
+        private const int sizeY = 103;
+        public int quadrant = -1;
         public Robot(int px, int py, int vx, int vy)
         {
-            this.px = px;
-            this.py = py;
+            this.x = px;
+            this.y = py;
             this.vx = vx;
             this.vy = vy;
+        }
+        // Move robot N times
+        public void Move(int N)
+        {
+            // Displacement
+            int newX = x + (N * vx);
+            int newY = y + (N * vy);
+            // Wrap around like pacman
+            while (newX < 0)
+            {
+                newX += sizeX;
+            }
+            while (newY < 0)
+            {
+                newY += sizeY;
+            }
+            x = newX % sizeX;
+            y = newY % sizeY;
+            // Calculate quadrant
+            UpdateQuadrant();
+        }
+        private void UpdateQuadrant()
+        {
+            // Divide map into 4 quadrants
+            // We are _excluding_ the central line of X's
+            // .....|X|.....
+            // ..1..|X|..2..
+            // .....|X|.....
+            // -----+X+-----
+            // XXXXXXXXXXXXX
+            // -----+X+-----
+            // .....|X|.....
+            // ..3..|X|..4..
+            // .....|X|.....
+            int halfX = (sizeX - 1) / 2;
+            int halfY = (sizeY - 1) / 2;
 
+            // We need all the conditions because we are exclusing the central positions
+            if (x < halfX)
+            {
+                if (y < halfY)
+                    quadrant = 1;
+                else if (y > halfY)
+                    quadrant = 3;
+            }
+            else if (x > halfX)
+            {
+                if (y < halfY)
+                    quadrant = 2;
+                else if (y > halfY)
+                    quadrant = 4;
+            }
+        }
+        public bool IsInQuadrant(int q)
+        {
+            return q == quadrant;
         }
     }
     public class Program
@@ -104,10 +165,24 @@ namespace AOC
             {
                 Console.WriteLine("Made {0} robots", robots.Count);
             }
+            int seconds = 100;
+            Console.WriteLine("Moving robots {0} times...", seconds);
+            robots.ForEach(x => x.Move(100));
+            // Get quadrant count
+            // Safety factor is no. in each quadrant multiplied
+            sum = robots.Sum(x => x.IsInQuadrant(1) ? 1 : 0)
+                * robots.Sum(x => x.IsInQuadrant(2) ? 1 : 0)
+                * robots.Sum(x => x.IsInQuadrant(3) ? 1 : 0)
+                * robots.Sum(x => x.IsInQuadrant(4) ? 1 : 0);
+
+            if (debugmode)
+            {
+                Console.WriteLine("Robot 1 is at x,y [{0},{1}], quadrant {2}", robots.First().x, robots.First().y, robots.First().quadrant);
+            }
 
             // Output
             Console.WriteLine("--");
-            Console.WriteLine("Sum = {0}", sum);
+            Console.WriteLine("Safety factor (P1) = {0}", sum);
             if (sum == 12)
             {
                 Console.WriteLine("Answer matches example expected answer");

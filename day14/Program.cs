@@ -29,15 +29,16 @@ namespace AOC
             // Displacement
             int newX = x + (N * vx);
             int newY = y + (N * vy);
-            // Wrap around like pacman
-            while (newX < 0)
+            // Wrap around like pacman, negative values add size as many times as needed
+            if (newX < 0)
             {
-                newX += sizeX;
+                newX = newX + sizeX * ((int)Math.Floor( - newX / (double)sizeX) + 1);
             }
-            while (newY < 0)
+            if (newY < 0)
             {
-                newY += sizeY;
+                newY = newY + sizeY * ((int)Math.Floor( - newY / (double)sizeY) + 1);
             }
+            // Wrap around positive values too
             x = newX % sizeX;
             y = newY % sizeY;
             // Calculate quadrant

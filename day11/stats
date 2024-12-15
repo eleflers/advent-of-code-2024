@@ -1,0 +1,36 @@
+# Part 2 only
+
+ Performance counter stats for 'bin/Debug/net9.0/day11 input':
+
+            132.58 msec task-clock:u                     #    0.953 CPUs utilized
+                 0      context-switches:u               #    0.000 /sec
+                 0      cpu-migrations:u                 #    0.000 /sec
+             4,584      page-faults:u                    #   34.576 K/sec
+       364,152,570      cycles:u                         #    2.747 GHz
+       612,985,569      instructions:u                   #    1.68  insn per cycle
+       105,570,004      branches:u                       #  796.294 M/sec
+         1,834,766      branch-misses:u                  #    1.74% of all branches
+
+       0.139068923 seconds time elapsed
+
+       0.108947000 seconds user
+       0.023213000 seconds sys
+
+# Part 2, very large test data set
+
+ Performance counter stats for 'bin/Debug/net9.0/day11 4/Xh3u.txt':
+
+            281.71 msec task-clock:u                     #    0.990 CPUs utilized
+                 0      context-switches:u               #    0.000 /sec
+                 0      cpu-migrations:u                 #    0.000 /sec
+             9,783      page-faults:u                    #   34.727 K/sec
+       877,216,271      cycles:u                         #    3.114 GHz
+     1,653,764,731      instructions:u                   #    1.89  insn per cycle
+       287,678,533      branches:u                       #    1.021 G/sec
+         3,637,256      branch-misses:u                  #    1.26% of all branches
+
+       0.284446423 seconds time elapsed
+
+       0.239774000 seconds user
+       0.040387000 seconds sys
+

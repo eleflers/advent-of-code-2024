@@ -15,6 +15,8 @@ namespace AOC
         //private const int sizeY = 7; // Example grid
         private const int sizeX = 101;
         private const int sizeY = 103;
+        private const int halfX = (sizeX - 1) / 2;
+        private const int halfY = (sizeY - 1) / 2;
         public int quadrant = -1;
         public Robot(int px, int py, int vx, int vy)
         {
@@ -57,8 +59,6 @@ namespace AOC
             // .....|X|.....
             // ..3..|X|..4..
             // .....|X|.....
-            int halfX = (sizeX - 1) / 2;
-            int halfY = (sizeY - 1) / 2;
 
             // We need all the conditions because we are exclusing the central positions
             if (x < halfX)
@@ -79,6 +79,74 @@ namespace AOC
         public bool IsInQuadrant(int q)
         {
             return q == quadrant;
+        }
+        public double DistanceToCentre
+        {
+            // x^2 + y^2 distance to centre, no point normalising
+            get => Math.Pow(x - halfX, 2) + Math.Pow(y - halfY, 2);
+        }
+    }
+    public class Bathroom
+    {
+        private List<Robot> robots;
+        private const int sizeX = 101;
+        private const int sizeY = 103;
+        public int secondsPassed = 0;
+        private string emptyRow = new string('.', sizeX);
+        private List<char[]> grid = new List<char[]>();
+        public int SafetyScore
+        {
+            get
+            {
+                return robots.Sum(x => x.IsInQuadrant(1) ? 1 : 0)
+                    * robots.Sum(x => x.IsInQuadrant(2) ? 1 : 0)
+                    * robots.Sum(x => x.IsInQuadrant(3) ? 1 : 0)
+                    * robots.Sum(x => x.IsInQuadrant(4) ? 1 : 0);
+            }
+        }
+        public double AverageDistanceToCentre
+        {
+            get
+            {
+                // Sum of distance to centre, divided by no. of robots, but no point normalising
+                // since count of robots does not change
+                return robots.Sum(x => x.DistanceToCentre);
+            }
+        }
+        public Bathroom(List<Robot> robots)
+        {
+            this.robots = robots;
+        }
+        public void MoveRobots(int N)
+        {
+            robots.ForEach(x => x.Move(N));
+            secondsPassed += N;
+        }
+        public void Draw()
+        {
+            // Draw the bathroom on screen
+            Console.WriteLine("Drawing bathroom:");
+
+            // Blank map
+            grid = new List<char[]>();
+            for (int i = 0; i < sizeY; i++)
+            {
+                grid.Add(emptyRow.ToCharArray());
+            }
+            // Place every robot in array
+            foreach (Robot r in robots)
+            {
+                grid[r.y][r.x] = '#';
+            }
+
+            // Draw to screen
+            foreach (var line in grid)
+            {
+                Console.WriteLine(line);
+            }
+            Console.WriteLine("{0} seconds (robot moves) have passed", secondsPassed);
+            Console.WriteLine("Safety score is {0}", SafetyScore);
+            Console.WriteLine("Average Distance is {0}", AverageDistanceToCentre);
         }
     }
     public class Program
@@ -161,6 +229,9 @@ namespace AOC
                 }
             }
 
+            // Clone list so we have a blank slate for P1 and P2
+            Bathroom bathroom = new Bathroom(robots);
+
             // Processing
             if (debugmode)
             {
@@ -168,17 +239,29 @@ namespace AOC
             }
             int seconds = 100;
             Console.WriteLine("Moving robots {0} times...", seconds);
-            robots.ForEach(x => x.Move(100));
+            bathroom.MoveRobots(seconds);
             // Get quadrant count
             // Safety factor is no. in each quadrant multiplied
-            sum = robots.Sum(x => x.IsInQuadrant(1) ? 1 : 0)
-                * robots.Sum(x => x.IsInQuadrant(2) ? 1 : 0)
-                * robots.Sum(x => x.IsInQuadrant(3) ? 1 : 0)
-                * robots.Sum(x => x.IsInQuadrant(4) ? 1 : 0);
+            sum = bathroom.SafetyScore;
 
-            if (debugmode)
+            // Undo Part 1
+            bathroom.MoveRobots(-seconds);
+
+            // Part 2
+            bathroom.Draw();
+            long lowestSafetyScore = bathroom.SafetyScore;
+            double lowestDistanceScore = bathroom.AverageDistanceToCentre;
+            seconds = 0;
+            while (seconds < 10000)
             {
-                Console.WriteLine("Robot 1 is at x,y [{0},{1}], quadrant {2}", robots.First().x, robots.First().y, robots.First().quadrant);
+                bathroom.MoveRobots(1);
+                seconds++;
+                if (bathroom.AverageDistanceToCentre < lowestDistanceScore)
+                {
+                    lowestDistanceScore = bathroom.AverageDistanceToCentre;
+                    bathroom.Draw();
+                }
+                //Thread.Sleep(200);
             }
 
             // Output

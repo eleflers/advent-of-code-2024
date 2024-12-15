@@ -17,12 +17,12 @@ namespace AOC
             string filename = "input";
             if (argv.Count == 0)
             {
-                Console.WriteLine("Assume default input file '{0}", filename);
+                Console.WriteLine("Assume default input file '{0}'", filename);
             }
             else if (argv.Count > 0)
             {
                 filename = argv[0];
-                Console.WriteLine("Taking CLI input file name {0}'", filename);
+                Console.WriteLine("Taking CLI input file name '{0}'", filename);
             }
             if (argv.Count > 1)
             {

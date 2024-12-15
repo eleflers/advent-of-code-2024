@@ -1,0 +1,16 @@
+ Performance counter stats for 'bin/Debug/net9.0/day14 input':
+
+            674.37 msec task-clock:u                     #    0.968 CPUs utilized
+                 0      context-switches:u               #    0.000 /sec
+                 0      cpu-migrations:u                 #    0.000 /sec
+             3,252      page-faults:u                    #    4.822 K/sec
+     2,263,065,317      cycles:u                         #    3.356 GHz
+     3,404,097,164      instructions:u                   #    1.50  insn per cycle
+       524,464,147      branches:u                       #  777.707 M/sec
+        14,775,142      branch-misses:u                  #    2.82% of all branches
+
+       0.696676831 seconds time elapsed
+
+       0.591060000 seconds user
+       0.076666000 seconds sys
+

@@ -34,10 +34,14 @@
 
 # AoC things
 input
+testinput*
 scratch
 *.jpg
 *.jpeg
 *.png
+*.txt
+*.7z
+*.zip
 
 # Vim: https://github.com/github/gitignore/blob/main/Global/Vim.gitignore
 # Swap

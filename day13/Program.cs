@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.IO;
+using MathNet.Numerics.LinearAlgebra;
 
 namespace AOC
 {
@@ -11,12 +12,12 @@ namespace AOC
         private int Na; // Num A presses
         private int Nb; // Num B presses
         // Problem input
-        public decimal AX; // X Dist. per A press
-        public decimal BX; // X Dist. per B press
-        public decimal CX; // Prize loc. X
-        public decimal AY; // Y Dist. per A press
-        public decimal BY; // Y Dist. per B press
-        public decimal CY; // Prize loc. Y
+        public double AX; // X Dist. per A press
+        public double BX; // X Dist. per B press
+        public double CX; // Prize loc. X
+        public double AY; // Y Dist. per A press
+        public double BY; // Y Dist. per B press
+        public double CY; // Prize loc. Y
         public ClawMachine()
         {
         }
@@ -25,50 +26,39 @@ namespace AOC
             // 2 simultaneous equations to solve
             //     (1) prizeX = Apresses*AbuttonX + Bpresses*BbuttonX
             //     (2) prizeY = Apresses*AbuttonY + Bpresses*BbuttonY
-            // i.e.
-            //     (1) cx = ax.na + bx.nb
-            //     (2) cy = ay.na + by.nb
-            // Rearrange (1) for nb
-            //     (1a) bx.nb = cx - ax.na
-            //     (1a) nb    = (cx - ax.na)/bx
-            // Subst. (1a) -> (2)
-            //     (3) cy = ay.na + by.(cx - ax.na)/bx
-            //     (3) cy = ay.na + (by/bx)cx - (by/bx)ax.na
-            //     (3) cy = na(ay - (by/bx)ax) + (by/bx)cx
-            //     (3) na = (cy - (by/bx)cx) / (ay - (by/bx)ax)
-            Console.WriteLine("Solving claw machine for prize X:{0}, Y:{1}", CX, CY);
-
-            // First check some conditions for no solution
-            if (BX == 0 || (AY - (BY/BX) * AX) == 0)
-            {
-                // Divide by 0 is required!
-                Na = 0;
-                Nb = 0;
-                Console.WriteLine("Avoiding a divide by 0, no solutions");
-                return;
-            }
-
-            // Equation (3)
-            Na = (int)Math.Round((CY - (BY/BX) * CX) / (AY - (BY/BX) * AX));
-            // Equation (1a)
-            Nb = (int)Math.Round((CX - AX * Na) / BX);
+            // i.e. in matrix form
+            //     (1) ax.na + bx.nb = cx
+            //     (2) ay.na + by.nb = cy
+            //Console.WriteLine("Solving claw machine for prize X:{0}, Y:{1}", CX, CY);
 
             // TODO: Pre-processing to check parallel lines
+            // If so we need our own bespoke cost logic, if both hit the target
+
+            // External matrix linear equation solver, from MathNet.Numerics.LinearAlgebra
+            // Solve matrix equation A x = b
+            var A = Matrix<double>.Build.DenseOfArray(new double[,] {
+                {AX, BX},
+                {AY, BY},
+            });
+            var b = Vector<double>.Build.Dense(new double[] {CX, CY});
+            var x = A.Solve(b);
+            Na = (int)Math.Round(x[0]);
+            Nb = (int)Math.Round(x[1]);
 
             // Check for negative results, can't press a button negative times!
             if (Na < 0 || Nb < 0)
             {
-                Console.WriteLine("Discarding button press solution, negative button press required");
+                //Console.WriteLine("Discarding button press solution, negative button press required");
                 Na = 0;
                 Nb = 0;
             }
 
-            Console.WriteLine("Solved NumA:{0}, NumB:{1}", Na, Nb);
+            //Console.WriteLine("Solved NumA:{0}, NumB:{1}", Na, Nb);
 
             // Arbitrarily throw out solutions requiring over 100 presses of a button, because the problem said to
             if (Na > 100 || Nb > 100)
             {
-                Console.WriteLine("Discarding button press solution, more than 100 presses of a button required");
+                //Console.WriteLine("Discarding button press solution, more than 100 presses of a button required");
                 Na = 0;
                 Nb = 0;
             }

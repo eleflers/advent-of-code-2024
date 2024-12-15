@@ -25,7 +25,7 @@ namespace AOC
             // 2 simultaneous equations to solve
             //     (1) prizeX = Apresses*AbuttonX + Bpresses*BbuttonX
             //     (2) prizeY = Apresses*AbuttonY + Bpresses*BbuttonY
-            // aka
+            // i.e.
             //     (1) cx = ax.na + bx.nb
             //     (2) cy = ay.na + by.nb
             // Rearrange (1) for nb
@@ -47,29 +47,31 @@ namespace AOC
                 Console.WriteLine("Avoiding a divide by 0, no solutions");
                 return;
             }
+
             // Equation (3)
             Na = (int)Math.Round((CY - (BY/BX) * CX) / (AY - (BY/BX) * AX));
             // Equation (1a)
             Nb = (int)Math.Round((CX - AX * Na) / BX);
 
+            // TODO: Pre-processing to check parallel lines
+
             // Check for negative results, can't press a button negative times!
             if (Na < 0 || Nb < 0)
             {
-                Console.WriteLine("Avoiding negative button press solution");
+                Console.WriteLine("Discarding button press solution, negative button press required");
                 Na = 0;
                 Nb = 0;
             }
 
             Console.WriteLine("Solved NumA:{0}, NumB:{1}", Na, Nb);
 
-            // Arbitrarily throw out solutions requiring over 100 presses of a button, because the problem said so
+            // Arbitrarily throw out solutions requiring over 100 presses of a button, because the problem said to
             if (Na > 100 || Nb > 100)
             {
                 Console.WriteLine("Discarding button press solution, more than 100 presses of a button required");
                 Na = 0;
                 Nb = 0;
             }
-
         }
         public int PrizeCostTokens()
         {

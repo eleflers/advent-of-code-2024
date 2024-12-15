@@ -84,6 +84,21 @@ namespace AOC
                 Na = 0;
                 Nb = 0;
             }
+
+            // Self-check, for floating point weirdness
+            if (Na != 0 || Nb != 0)
+            {
+                if (Na * AX + Nb * BX != CX)
+                {
+                    Console.WriteLine("Self-check of result failed! Prize X:{0} Y:{1} N_A:{2} N_B:{3} Expected X:{0} Got X:{4}", CX, CY, Na, Nb, Na * AX + Nb * BX);
+                    throw new InvalidDataException("Self-check of result failed!");
+                }
+                else if (Na * AY + Nb * BY != CY)
+                {
+                    Console.WriteLine("Self-check of result failed! Prize X:{0} Y:{1} N_A:{2} N_B:{3} Expected Y:{1} Got Y:{4}", CX, CY, Na, Nb, Na * AY + Nb * BY);
+                    throw new InvalidDataException("Self-check of result failed!");
+                }
+            }
         }
         public int PrizeCostTokens()
         {

@@ -32,24 +32,32 @@ namespace AOC
             //Console.WriteLine("Solving claw machine for prize X:{0}, Y:{1}", CX, CY);
 
             // Pre-processing to check parallel lines
-            // If so we need our own bespoke cost logic, if both can hit the target
+            // If so we need our own bespoke cost logic, if both can hit the target alone
             if (CX / AX == CY / AY && CX / BX == CY / BY)
             {
                 // Both buttons can get there independently
                 // Check to see which costs less
+                // And also whether it can actually get there! (It may be 2.25 button presses or similar...)
                 Console.WriteLine("Found machine for prize X:{0}, Y:{1} where A and B buttons can both get to the prize independently", CX, CY);
                 // if (AX / costA > BX / costB)
-                if (AX * costB > BX * costA)
+                if (AX * costB > BX * costA && CX % AX == 0 && CY % AY == 0)
                 {
                     // A is more cost effective
                     Na = (int)Math.Round(CX / AX);
                     Nb = 0;
                 }
-                else
+                else if (CX % BX == 0 && CY % BY == 0)
                 {
                     // B is more cost effective
                     Na = 0;
                     Nb = (int)Math.Round(CX / BX);
+                }
+                else
+                {
+                    // No integer step solution for either button to get there, even though direction is right
+                    // There won't be a matrix solution either so just return here
+                    Na = 0;
+                    Nb = 0;
                 }
                 Console.WriteLine("Solved NumA:{0}, NumB:{1}", Na, Nb);
                 return;
@@ -85,18 +93,22 @@ namespace AOC
                 Nb = 0;
             }
 
-            // Self-check, for floating point weirdness
+            // Self-check, for fractional answers, we need integers
             if (Na != 0 || Nb != 0)
             {
                 if (Na * AX + Nb * BX != CX)
                 {
                     Console.WriteLine("Self-check of result failed! Prize X:{0} Y:{1} N_A:{2} N_B:{3} Expected X:{0} Got X:{4}", CX, CY, Na, Nb, Na * AX + Nb * BX);
-                    throw new InvalidDataException("Self-check of result failed!");
+                    Console.WriteLine("Discarding possible fractional result");
+                    Na = 0;
+                    Nb = 0;
                 }
                 else if (Na * AY + Nb * BY != CY)
                 {
                     Console.WriteLine("Self-check of result failed! Prize X:{0} Y:{1} N_A:{2} N_B:{3} Expected Y:{1} Got Y:{4}", CX, CY, Na, Nb, Na * AY + Nb * BY);
-                    throw new InvalidDataException("Self-check of result failed!");
+                    Console.WriteLine("Discarding possible fractional result");
+                    Na = 0;
+                    Nb = 0;
                 }
             }
         }

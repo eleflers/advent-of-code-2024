@@ -48,30 +48,33 @@ namespace AOC
         public bool TryMove(Direction d)
         {
             int newX;
-            int probeX; // For P2 we have to probe further ahead in X dir.
             int newY;
+            // For P2 horizontal moves we have to probe further ahead in X dir.
+            // For P2 vertical moves we have to probe x+1 also as box is now 2 units wide
+            // Store these in var.
+            int probeX;
             // Parse direction
             switch (d)
             {
                 case Direction.Up:
                     newX = x;
-                    probeX = x;
                     newY = y - 1;
+                    probeX = x + 1;
                     break;
                 case Direction.Down:
                     newX = x;
-                    probeX = x;
                     newY = y + 1;
+                    probeX = x + 1;
                     break;
                 case Direction.Left:
                     newX = x - 1;
-                    probeX = x - 2;
                     newY = y;
+                    probeX = x - 2; // Peek 1 further ahead than we move
                     break;
                 case Direction.Right:
                     newX = x + 1;
-                    probeX = x + 2;
                     newY = y;
+                    probeX = x + 2; // Peek 1 further ahead than we move
                     break;
                 default:
                     // Keep compiler happy
@@ -79,8 +82,24 @@ namespace AOC
             }
             // Test to see if we're moving into an empty space
             // Part 2 we have to peek 2 spaces ahead not 1, but we still only move 1
-            if (w.SpotIsEmpty(probeX, newY))
+            if (!w.Part2 && w.SpotIsEmpty(newX, newY))
             {
+                Move(newX, newY);
+                return true;
+            }
+            else if (w.Part2 && (d == Direction.Up || d == Direction.Down)
+                    && w.SpotIsEmpty(newX, newY)
+                    && w.SpotIsEmpty(probeX, newY))
+            {
+                // Up/down moves need to check x+1 also as box is twice as wide
+                Move(newX, newY);
+                return true;
+            }
+            else if (w.Part2 && (d == Direction.Left || d == Direction.Right)
+                    && w.SpotIsEmpty(probeX, newY))
+            {
+                // Left/right moves need to peek 2 ahead instead of 1, as box is twice as wide
+                // But still moves only 1 space
                 Move(newX, newY);
                 return true;
             }
@@ -91,20 +110,64 @@ namespace AOC
                 if (!w.Part2)
                 {
                     blocker = w.GetItem(newX, newY);
+                    if (blocker.TryMove(d))
+                    {
+                        // Success!
+                        Move(newX, newY);
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                else if (d == Direction.Left || d == Direction.Right)
+                {
+                    // Part 2 left and right
+                    blocker = w.GetItem(probeX, newY);
+                    if (blocker.TryMove(d))
+                    {
+                        // Success!
+                        Move(newX, newY);
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
                 }
                 else
                 {
-                    blocker = w.GetItem(newX+1, newY);
-                }
-                if (blocker.TryMove(d))
-                {
-                    // Success!
-                    Move(newX, newY);
-                    return true;
-                }
-                else
-                {
-                    return false;
+                    // Part 2 up and down, for this we could have 1 or 2 different blockers
+                    IWarehouseItem blocker2;
+                    if (!w.SpotIsEmpty(newX, newY))
+                    {
+                        blocker = w.GetItem(newX, newY);
+                        if (!w.SpotIsEmpty(probeX, newY))
+                        {
+                            blocker2 = w.GetItem(probeX, newY);
+                            if (blocker.x != blocker2.x || blocker.y != blocker2.y)
+                            {
+                                // Have 2 blockers to deal with
+                                // Must try both independently without executing the move until we know if it will work
+                                throw new NotImplementedException();
+                            }
+                        }
+                    }
+                    else
+                    {
+                        blocker = w.GetItem(probeX, newY);
+                    }
+                    if (blocker.TryMove(d))
+                    {
+                        // Success!
+                        Move(newX, newY);
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
                 }
             }
         }
@@ -467,7 +530,7 @@ namespace AOC
             sum = warehouse.SumBoxGPScoords;
 
             // P2
-            robotP2.ExecuteMoves(instructionsP2, 1, true);
+            robotP2.ExecuteMoves(instructionsP2, draw: true);
             long sumP2 = warehouseP2.SumBoxGPScoords;
 
             // Output

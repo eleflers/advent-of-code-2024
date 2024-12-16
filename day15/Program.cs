@@ -48,24 +48,29 @@ namespace AOC
         public bool TryMove(Direction d)
         {
             int newX;
+            int probeX; // For P2 we have to probe further ahead in X dir.
             int newY;
             // Parse direction
             switch (d)
             {
                 case Direction.Up:
                     newX = x;
+                    probeX = x;
                     newY = y - 1;
                     break;
                 case Direction.Down:
                     newX = x;
+                    probeX = x;
                     newY = y + 1;
                     break;
                 case Direction.Left:
                     newX = x - 1;
+                    probeX = x - 2;
                     newY = y;
                     break;
                 case Direction.Right:
                     newX = x + 1;
+                    probeX = x + 2;
                     newY = y;
                     break;
                 default:
@@ -73,7 +78,8 @@ namespace AOC
                     throw new InvalidDataException("Invalid Direction d");
             }
             // Test to see if we're moving into an empty space
-            if (w.SpotIsEmpty(newX, newY))
+            // Part 2 we have to peek 2 spaces ahead not 1, but we still only move 1
+            if (w.SpotIsEmpty(probeX, newY))
             {
                 Move(newX, newY);
                 return true;
@@ -81,7 +87,15 @@ namespace AOC
             else
             {
                 // Have to try and push whatever is blocking us
-                IWarehouseItem blocker = w.GetItem(newX, newY);
+                IWarehouseItem blocker;
+                if (!w.Part2)
+                {
+                    blocker = w.GetItem(newX, newY);
+                }
+                else
+                {
+                    blocker = w.GetItem(newX+1, newY);
+                }
                 if (blocker.TryMove(d))
                 {
                     // Success!
@@ -108,30 +122,38 @@ namespace AOC
         private Dictionary<int,Dictionary<int,IWarehouseItem>> items = new Dictionary<int, Dictionary<int, IWarehouseItem>>();
         private int maxX = 0;
         private int maxY = 0;
+        public bool Part2;
         // Keep a separate list of the boxes in 'items', to do operations on them later
         private List<Box> boxes = new List<Box>();
         public int SumBoxGPScoords
         {
             get => boxes.Sum(x => x.GPScoords);
         }
-        public Warehouse()
+        public Warehouse(bool part2)
         {
+            this.Part2 = part2;
         }
-        public void PlaceItem(IWarehouseItem i)
+        public void PlaceItem(IWarehouseItem i, int xOffset = 0)
         {
             if (!items.ContainsKey(i.y))
             {
                 items.Add(i.y, new Dictionary<int, IWarehouseItem>());
             }
-            items[i.y].Add(i.x, i);
+            items[i.y].Add(i.x + xOffset, i);
             // Keep track of size
-            if (i.x > maxX)
+            if (i.x + xOffset > maxX)
             {
-                maxX = i.x;
+                maxX = i.x + xOffset;
             }
             if (i.y > maxY)
             {
                 maxY = i.y;
+            }
+            // Part 2 place the same item in at x + 1 pos'n so we can hit either square
+            // Make sure it's not recursive by checking for xOffset
+            if (Part2 && xOffset == 0)
+            {
+                PlaceItem(i, xOffset: 1);
             }
         }
         public void AddBox(Box b)
@@ -164,6 +186,12 @@ namespace AOC
         {
             IWarehouseItem i = GetItem(oldX, oldY);
             items[oldY].Remove(oldX);
+            if (Part2)
+            {
+                // Also x + 1 for P2, point to same obj, so either square can be hit
+                items[oldY].Remove(oldX + 1);
+                items[newY].Add(newX + 1, i);
+            }
             items[newY].Add(newX, i);
         }
         public void DrawWarehouse(Robot r)
@@ -183,7 +211,15 @@ namespace AOC
             }
             foreach (var b in boxes)
             {
-                pic[b.y][b.x] = 'O';
+                if (Part2)
+                {
+                    pic[b.y][b.x] = '[';
+                    pic[b.y][b.x+1] = ']';
+                }
+                else
+                {
+                    pic[b.y][b.x] = 'O';
+                }
             }
             pic[r.y][r.x] = '@';
             Console.WriteLine("Warehouse after {0} move instructions:", r.MoveAttempts);
@@ -324,7 +360,9 @@ namespace AOC
             int lineNr = 0;
             Queue<Direction> instructions = new Queue<Direction>();
             Robot? robot = null;
-            Warehouse warehouse = new Warehouse();
+            Robot? robotP2 = null;
+            Warehouse warehouse = new Warehouse(false);
+            Warehouse warehouseP2 = new Warehouse(true);
             int section = 1;
             using (var streamReader = new StreamReader(filename))
             {
@@ -350,15 +388,25 @@ namespace AOC
                         {
                             Wall i = new Wall(pos, lineNr);
                             warehouse.PlaceItem(i);
+                            // P2
+                            Wall iP2 = new Wall(2*pos, lineNr);
+                            warehouseP2.PlaceItem(iP2);
+                            // Next
                             pos = line.IndexOf("#", pos+1);
                         }
                         // Boxes
                         pos = line.IndexOf("O");
                         while (pos != -1)
                         {
+                            // P1
                             Box i = new Box(pos, lineNr, warehouse);
                             warehouse.PlaceItem(i);
                             warehouse.AddBox(i);
+                            // P2
+                            Box iP2 = new Box(2*pos, lineNr, warehouseP2);
+                            warehouseP2.PlaceItem(iP2);
+                            warehouseP2.AddBox(iP2);
+                            // Next
                             pos = line.IndexOf("O", pos+1);
                         }
                         // See if the robot is on this line too
@@ -366,6 +414,7 @@ namespace AOC
                         if (pos != -1)
                         {
                             robot = new Robot(pos, lineNr, warehouse);
+                            robotP2 = new Robot(2*pos, lineNr, warehouseP2);
                         }
                     }
                     else
@@ -402,7 +451,7 @@ namespace AOC
             }
 
             // Processing
-            if (robot == null)
+            if (robot == null || robotP2 == null)
             {
                 throw new InvalidDataException("We didn't get a robot!");
             }
@@ -411,13 +460,20 @@ namespace AOC
                 Console.WriteLine("Robot is at x,y [{0},{1}], line {2} col {3}", robot.x, robot.y, robot.y+1, robot.x+1);
                 Console.WriteLine("Parsed {0} robot instructions", instructions.Count);
             }
-            // Pass in instructions
+            // Duplicate instructions
+            Queue<Direction> instructionsP2 = new Queue<Direction>(instructions);
+            // Pass in instructions P1
             robot.ExecuteMoves(instructions);
             sum = warehouse.SumBoxGPScoords;
 
+            // P2
+            robotP2.ExecuteMoves(instructionsP2, 1, true);
+            long sumP2 = warehouseP2.SumBoxGPScoords;
+
             // Output
             Console.WriteLine("--");
-            Console.WriteLine("Sum = {0}", sum);
+            Console.WriteLine("Sum (P1) = {0}", sum);
+            Console.WriteLine("Sum (P2) = {0}", sumP2);
             if (sum == 10092 || sum == 2028)
             {
                 Console.WriteLine("Answer matches example expected answer");

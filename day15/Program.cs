@@ -27,7 +27,6 @@ namespace AOC
         }
         public bool TryMove(Direction d)
         {
-            Console.WriteLine("Cannot move wall at {0},{1}", x, y);
             return false;
         }
     }
@@ -48,7 +47,6 @@ namespace AOC
         }
         public bool TryMove(Direction d)
         {
-            Console.WriteLine("Attempting to move box at {0},{1} dir. {2}", x, y, d);
             int newX;
             int newY;
             // Parse direction
@@ -77,25 +75,21 @@ namespace AOC
             // Test to see if we're moving into an empty space
             if (w.SpotIsEmpty(newX, newY))
             {
-                Console.WriteLine("Target space empty!", x, y);
                 Move(newX, newY);
                 return true;
             }
             else
             {
                 // Have to try and push whatever is blocking us
-                Console.WriteLine("Try to push blocking object at {0},{1}", newX, newY);
                 IWarehouseItem blocker = w.GetItem(newX, newY);
                 if (blocker.TryMove(d))
                 {
                     // Success!
-                    Console.WriteLine("Success");
                     Move(newX, newY);
                     return true;
                 }
                 else
                 {
-                    Console.WriteLine("Fail");
                     return false;
                 }
             }
@@ -107,7 +101,6 @@ namespace AOC
             x = newX;
             y = newY;
             w.MoveItem(oldX, oldY, newX, newY);
-            Console.WriteLine("Box new coords {0},{1}", x, y);
         }
     }
     public class Warehouse
@@ -155,12 +148,10 @@ namespace AOC
             {
                 if (items[y].ContainsKey(x))
                 {
-                    Console.WriteLine("Was asked if spot {0},{1} is empty, it is NOT empty",x , y);
                     return false;
                 }
                 else
                 {
-                    Console.WriteLine("Was asked if spot {0},{1} is empty, it IS empty",x , y);
                     return true;
                 }
             }
@@ -171,7 +162,6 @@ namespace AOC
         }
         public void MoveItem(int oldX, int oldY, int newX, int newY)
         {
-            Console.WriteLine("Warehouse asked to move item from {0},{1} to {2},{3}", oldX, oldY, newX, newY);
             IWarehouseItem i = GetItem(oldX, oldY);
             items[oldY].Remove(oldX);
             items[newY].Add(newX, i);
@@ -196,10 +186,12 @@ namespace AOC
                 pic[b.y][b.x] = 'O';
             }
             pic[r.y][r.x] = '@';
+            Console.WriteLine("Warehouse after {0} move instructions:", r.MoveAttempts);
             foreach (var line in pic)
             {
                 Console.WriteLine(line);
             }
+            Console.WriteLine();
         }
     }
     public class Robot : IWarehouseItem
@@ -207,6 +199,7 @@ namespace AOC
         public int x { get; set; }
         public int y { get; set; }
         private Warehouse w;
+        public int MoveAttempts = 0;
         public Robot(int x, int y, Warehouse warehouse)
         {
             this.x = x;
@@ -218,9 +211,12 @@ namespace AOC
             int i = 0;
             while (instr.Count != 0 && i++ != limit)
             {
-                Console.WriteLine("Move {0}...", i);
+                if (draw || i % 200 == 0 || instr.Count == 1)
+                {
+                    Console.WriteLine("Executing instruction {0}/{1}...", i, i+instr.Count-1);
+                }
                 TryMove(instr.Dequeue());
-                if (draw)
+                if (draw || i % 1000 == 0 || instr.Count == 0)
                 {
                     w.DrawWarehouse(this);
                 }
@@ -228,9 +224,9 @@ namespace AOC
         }
         public bool TryMove(Direction d)
         {
-            Console.WriteLine("Attempting to move robot at {0},{1} dir. {2}", x, y, d);
             int newX;
             int newY;
+            MoveAttempts++;
             // Parse direction
             switch (d)
             {
@@ -257,25 +253,21 @@ namespace AOC
             // Test to see if we're moving into an empty space
             if (w.SpotIsEmpty(newX, newY))
             {
-                Console.WriteLine("Target space empty!", x, y);
                 Move(newX, newY);
                 return true;
             }
             else
             {
                 // Have to try and push whatever is blocking us
-                Console.WriteLine("Try to push blocking object at {0},{1}", newX, newY);
                 IWarehouseItem blocker = w.GetItem(newX, newY);
                 if (blocker.TryMove(d))
                 {
                     // Success!
-                    Console.WriteLine("Success");
                     Move(newX, newY);
                     return true;
                 }
                 else
                 {
-                    Console.WriteLine("Fail");
                     return false;
                 }
             }
@@ -284,7 +276,6 @@ namespace AOC
         {
             x = newX;
             y = newY;
-            Console.WriteLine("ROBOT new coords {0},{1}", x, y);
         }
     }
     public class Program
@@ -421,7 +412,7 @@ namespace AOC
                 Console.WriteLine("Parsed {0} robot instructions", instructions.Count);
             }
             // Pass in instructions
-            robot.ExecuteMoves(instructions, draw: true);
+            robot.ExecuteMoves(instructions);
             sum = warehouse.SumBoxGPScoords;
 
             // Output

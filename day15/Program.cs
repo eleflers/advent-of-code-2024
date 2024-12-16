@@ -27,6 +27,7 @@ namespace AOC
         }
         public bool TryMove(Direction d)
         {
+            Console.WriteLine("Cannot move wall at {0},{1}", x, y);
             return false;
         }
     }
@@ -37,7 +38,7 @@ namespace AOC
         private Warehouse w;
         public int GPScoords
         {
-            get => 100*x + 100*y;
+            get => x + y*100;
         }
         public Box(int x, int y, Warehouse w)
         {
@@ -47,6 +48,7 @@ namespace AOC
         }
         public bool TryMove(Direction d)
         {
+            Console.WriteLine("Attempting to move box at {0},{1} dir. {2}", x, y, d);
             int newX;
             int newY;
             // Parse direction
@@ -75,37 +77,44 @@ namespace AOC
             // Test to see if we're moving into an empty space
             if (w.SpotIsEmpty(newX, newY))
             {
+                Console.WriteLine("Target space empty!", x, y);
                 Move(newX, newY);
                 return true;
             }
             else
             {
                 // Have to try and push whatever is blocking us
+                Console.WriteLine("Try to push blocking object at {0},{1}", newX, newY);
                 IWarehouseItem blocker = w.GetItem(newX, newY);
                 if (blocker.TryMove(d))
                 {
                     // Success!
+                    Console.WriteLine("Success");
                     Move(newX, newY);
                     return true;
                 }
                 else
                 {
+                    Console.WriteLine("Fail");
                     return false;
                 }
             }
         }
         private void Move(int newX, int newY)
         {
+            int oldX = x;
+            int oldY = y;
             x = newX;
             y = newY;
-            w.MoveItem(x, y, newX, newY);
+            w.MoveItem(oldX, oldY, newX, newY);
+            Console.WriteLine("Box new coords {0},{1}", x, y);
         }
     }
     public class Warehouse
     {
         private Dictionary<int,Dictionary<int,IWarehouseItem>> items = new Dictionary<int, Dictionary<int, IWarehouseItem>>();
-        //private int sizeX;
-        //private int sizeY;
+        private int maxX = 0;
+        private int maxY = 0;
         // Keep a separate list of the boxes in 'items', to do operations on them later
         private List<Box> boxes = new List<Box>();
         public int SumBoxGPScoords
@@ -122,6 +131,15 @@ namespace AOC
                 items.Add(i.y, new Dictionary<int, IWarehouseItem>());
             }
             items[i.y].Add(i.x, i);
+            // Keep track of size
+            if (i.x > maxX)
+            {
+                maxX = i.x;
+            }
+            if (i.y > maxY)
+            {
+                maxY = i.y;
+            }
         }
         public void AddBox(Box b)
         {
@@ -135,16 +153,53 @@ namespace AOC
         {
             if (items.ContainsKey(y))
             {
-                if (items.ContainsKey(x))
+                if (items[y].ContainsKey(x))
+                {
+                    Console.WriteLine("Was asked if spot {0},{1} is empty, it is NOT empty",x , y);
+                    return false;
+                }
+                else
+                {
+                    Console.WriteLine("Was asked if spot {0},{1} is empty, it IS empty",x , y);
                     return true;
+                }
             }
-            return false;
+            else
+            {
+                throw new InvalidDataException("Dictionary is missing a row entry for y");
+            }
         }
         public void MoveItem(int oldX, int oldY, int newX, int newY)
         {
+            Console.WriteLine("Warehouse asked to move item from {0},{1} to {2},{3}", oldX, oldY, newX, newY);
             IWarehouseItem i = GetItem(oldX, oldY);
             items[oldY].Remove(oldX);
-            PlaceItem(i);
+            items[newY].Add(newX, i);
+        }
+        public void DrawWarehouse(Robot r)
+        {
+            // Draw a pretty picture for debugging
+            List<char[]> pic = new List<char[]>();
+            for (int i = 0; i < maxY+1; i++)
+            {
+                pic.Add(new string('.', maxX+1).ToCharArray());
+            }
+            foreach (var y in items.Keys)
+            {
+                foreach (var obj in items[y])
+                {
+                    pic[y][obj.Key] = '#';
+                }
+            }
+            foreach (var b in boxes)
+            {
+                pic[b.y][b.x] = 'O';
+            }
+            pic[r.y][r.x] = '@';
+            foreach (var line in pic)
+            {
+                Console.WriteLine(line);
+            }
         }
     }
     public class Robot : IWarehouseItem
@@ -158,15 +213,22 @@ namespace AOC
             this.y = y;
             this.w = warehouse;
         }
-        public void ExecuteMoves(Queue<Direction> instr)
+        public void ExecuteMoves(Queue<Direction> instr, int limit = -1, bool draw = false)
         {
-            while (instr.Count != 0)
+            int i = 0;
+            while (instr.Count != 0 && i++ != limit)
             {
+                Console.WriteLine("Move {0}...", i);
                 TryMove(instr.Dequeue());
+                if (draw)
+                {
+                    w.DrawWarehouse(this);
+                }
             }
         }
         public bool TryMove(Direction d)
         {
+            Console.WriteLine("Attempting to move robot at {0},{1} dir. {2}", x, y, d);
             int newX;
             int newY;
             // Parse direction
@@ -195,21 +257,25 @@ namespace AOC
             // Test to see if we're moving into an empty space
             if (w.SpotIsEmpty(newX, newY))
             {
+                Console.WriteLine("Target space empty!", x, y);
                 Move(newX, newY);
                 return true;
             }
             else
             {
                 // Have to try and push whatever is blocking us
+                Console.WriteLine("Try to push blocking object at {0},{1}", newX, newY);
                 IWarehouseItem blocker = w.GetItem(newX, newY);
                 if (blocker.TryMove(d))
                 {
                     // Success!
+                    Console.WriteLine("Success");
                     Move(newX, newY);
                     return true;
                 }
                 else
                 {
+                    Console.WriteLine("Fail");
                     return false;
                 }
             }
@@ -218,6 +284,7 @@ namespace AOC
         {
             x = newX;
             y = newY;
+            Console.WriteLine("ROBOT new coords {0},{1}", x, y);
         }
     }
     public class Program
@@ -354,7 +421,7 @@ namespace AOC
                 Console.WriteLine("Parsed {0} robot instructions", instructions.Count);
             }
             // Pass in instructions
-            robot.ExecuteMoves(instructions);
+            robot.ExecuteMoves(instructions, draw: true);
             sum = warehouse.SumBoxGPScoords;
 
             // Output

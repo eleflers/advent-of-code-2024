@@ -143,7 +143,7 @@ namespace AOC
         public void MoveItem(int oldX, int oldY, int newX, int newY)
         {
             IWarehouseItem i = GetItem(oldX, oldY);
-            items[oldX].Remove(oldY);
+            items[oldY].Remove(oldX);
             PlaceItem(i);
         }
     }

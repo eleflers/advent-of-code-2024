@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.IO;
+using System.Threading;
 
 namespace AOC
 {
@@ -14,7 +15,7 @@ namespace AOC
     {
         public int x { get; set; }
         public int y { get; set; }
-        public bool TryMove(Direction d);
+        public bool TryMove(Direction d, bool dryrun = false);
     }
     public class Wall : IWarehouseItem
     {
@@ -25,7 +26,7 @@ namespace AOC
             this.x = x;
             this.y = y;
         }
-        public bool TryMove(Direction d)
+        public bool TryMove(Direction d, bool dryrun = false)
         {
             return false;
         }
@@ -45,7 +46,7 @@ namespace AOC
             this.y = y;
             this.w = w;
         }
-        public bool TryMove(Direction d)
+        public bool TryMove(Direction d, bool dryrun = false)
         {
             int newX;
             int newY;
@@ -69,7 +70,7 @@ namespace AOC
                 case Direction.Left:
                     newX = x - 1;
                     newY = y;
-                    probeX = x - 2; // Peek 1 further ahead than we move
+                    probeX = x - 1; // Don't need to peek + 1 ahead, because box x-coords are tracked from left hand side
                     break;
                 case Direction.Right:
                     newX = x + 1;
@@ -84,7 +85,10 @@ namespace AOC
             // Part 2 we have to peek 2 spaces ahead not 1, but we still only move 1
             if (!w.Part2 && w.SpotIsEmpty(newX, newY))
             {
-                Move(newX, newY);
+                if (!dryrun)
+                {
+                    Move(newX, newY);
+                }
                 return true;
             }
             else if (w.Part2 && (d == Direction.Up || d == Direction.Down)
@@ -92,7 +96,10 @@ namespace AOC
                     && w.SpotIsEmpty(probeX, newY))
             {
                 // Up/down moves need to check x+1 also as box is twice as wide
-                Move(newX, newY);
+                if (!dryrun)
+                {
+                    Move(newX, newY);
+                }
                 return true;
             }
             else if (w.Part2 && (d == Direction.Left || d == Direction.Right)
@@ -100,20 +107,28 @@ namespace AOC
             {
                 // Left/right moves need to peek 2 ahead instead of 1, as box is twice as wide
                 // But still moves only 1 space
-                Move(newX, newY);
+                if (!dryrun)
+                {
+                    Move(newX, newY);
+                }
                 return true;
             }
             else
             {
                 // Have to try and push whatever is blocking us
+                // For Part 2 remember to hand down the dryrun parameter, because we could just be probing to see
+                // if a move is possible. In that case we want to ask the same of blockers not move them
                 IWarehouseItem blocker;
                 if (!w.Part2)
                 {
                     blocker = w.GetItem(newX, newY);
-                    if (blocker.TryMove(d))
+                    if (blocker.TryMove(d, dryrun))
                     {
                         // Success!
-                        Move(newX, newY);
+                        if (!dryrun)
+                        {
+                            Move(newX, newY);
+                        }
                         return true;
                     }
                     else
@@ -125,10 +140,13 @@ namespace AOC
                 {
                     // Part 2 left and right
                     blocker = w.GetItem(probeX, newY);
-                    if (blocker.TryMove(d))
+                    if (blocker.TryMove(d, dryrun))
                     {
                         // Success!
-                        Move(newX, newY);
+                        if (!dryrun)
+                        {
+                            Move(newX, newY);
+                        }
                         return true;
                     }
                     else
@@ -150,7 +168,22 @@ namespace AOC
                             {
                                 // Have 2 blockers to deal with
                                 // Must try both independently without executing the move until we know if it will work
-                                throw new NotImplementedException();
+                                if (blocker.TryMove(d, dryrun: true) && blocker2.TryMove(d, dryrun: true))
+                                {
+                                    // Move is possible, so do it (if this move is not itself also a dryrun!)
+                                    if (!dryrun)
+                                    {
+                                        blocker.TryMove(d);
+                                        blocker2.TryMove(d);
+                                        Move(newX, newY);
+                                    }
+                                    return true;
+                                }
+                                else
+                                {
+                                    // Move is not possible for 1 or more blockers
+                                    return false;
+                                }
                             }
                         }
                     }
@@ -158,10 +191,13 @@ namespace AOC
                     {
                         blocker = w.GetItem(probeX, newY);
                     }
-                    if (blocker.TryMove(d))
+                    if (blocker.TryMove(d, dryrun))
                     {
                         // Success!
-                        Move(newX, newY);
+                        if (!dryrun)
+                        {
+                            Move(newX, newY);
+                        }
                         return true;
                     }
                     else
@@ -285,6 +321,7 @@ namespace AOC
                 }
             }
             pic[r.y][r.x] = '@';
+            Console.Clear();
             Console.WriteLine("Warehouse after {0} move instructions:", r.MoveAttempts);
             foreach (var line in pic)
             {
@@ -318,10 +355,11 @@ namespace AOC
                 if (draw || i % 1000 == 0 || instr.Count == 0)
                 {
                     w.DrawWarehouse(this);
+                    Thread.Sleep(250);
                 }
             }
         }
-        public bool TryMove(Direction d)
+        public bool TryMove(Direction d, bool dryrun = false)
         {
             int newX;
             int newY;
@@ -352,17 +390,23 @@ namespace AOC
             // Test to see if we're moving into an empty space
             if (w.SpotIsEmpty(newX, newY))
             {
-                Move(newX, newY);
+                if (!dryrun)
+                {
+                    Move(newX, newY);
+                }
                 return true;
             }
             else
             {
                 // Have to try and push whatever is blocking us
                 IWarehouseItem blocker = w.GetItem(newX, newY);
-                if (blocker.TryMove(d))
+                if (blocker.TryMove(d, dryrun))
                 {
                     // Success!
-                    Move(newX, newY);
+                    if (!dryrun)
+                    {
+                        Move(newX, newY);
+                    }
                     return true;
                 }
                 else
@@ -530,7 +574,7 @@ namespace AOC
             sum = warehouse.SumBoxGPScoords;
 
             // P2
-            robotP2.ExecuteMoves(instructionsP2, draw: true);
+            robotP2.ExecuteMoves(instructionsP2);
             long sumP2 = warehouseP2.SumBoxGPScoords;
 
             // Output

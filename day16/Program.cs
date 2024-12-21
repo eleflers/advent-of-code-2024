@@ -3,10 +3,18 @@ using System.IO;
 
 namespace AOC
 {
+    public enum Direction : int
+    {
+        North = 0,
+        East = 1,
+        South = 2,
+        West = 3,
+    }
     public class Maze
     {
-        private Queue<(int x, int y)> frontier = new Queue<(int x, int y)>();
+        private PriorityQueue<(int x, int y), int> frontier = new PriorityQueue<(int x, int y), int>();
         private Dictionary<(int x, int y), (int x, int y)> cameFrom = new Dictionary<(int x, int y), (int x, int y)>();
+        private Dictionary<(int x, int y), (int cost, Direction d)> costSoFar = new Dictionary<(int x, int y), (int cost, Direction d)>();
         private (int x, int y) start;
         private (int x, int y) end;
         private int sizeX;
@@ -14,6 +22,21 @@ namespace AOC
         //private bool[,] map; // More efficient alternative using 2D arrays?
         private List<List<char>> map;
         private bool debugmode;
+        // Reindeer always starts facing East
+        private Direction startingDirection = Direction.East;
+        private const int moveCost = 1;
+        private const int turnCost = 1000;
+        public int Cost
+        {
+            get
+            {
+                if (costSoFar.Count == 0)
+                {
+                    Map();
+                }
+                return costSoFar[end].cost;
+            }
+        }
         public Maze(List<string> input, (int x, int y) start, (int x, int y) end, bool debugmode)
         {
             this.sizeX = input.First().Length;
@@ -53,14 +76,30 @@ namespace AOC
         {
             return map[y][x];
         }
-        private List<(int x, int y)> GetNeighbours((int x, int y) pos)
+        // Return list of viable neighbours + the cost required to get there (turncost + stepcost)
+        private List<(int x, int y, int cost, Direction d)> GetNeighbours((int x, int y) pos, Direction dir)
         {
-            List<(int x, int y)> result = new List<(int x, int y)>();
-            List<(int x, int y)> coords = new List<(int x, int y)>{
-                (x: pos.x  , y: pos.y+1),
-                (x: pos.x  , y: pos.y-1),
-                (x: pos.x+1, y: pos.y  ),
-                (x: pos.x-1, y: pos.y  ),
+            // Figure out min. turns req'd, can turn in either direction
+            // Get clockwise first, counterclockwise is 4-clockwise mod 4
+            int clockwiseTurnsForNorth = ((int)Direction.North - (int)dir + 4) % 4;
+            int clockwiseTurnsForEast = (clockwiseTurnsForNorth + 1) % 4;
+            int clockwiseTurnsForSouth = (clockwiseTurnsForNorth + 2) % 4;
+            int clockwiseTurnsForWest = (clockwiseTurnsForNorth + 3) % 4;
+            // Calculate costs
+            int turnCostNorth = 1000 * Math.Min(clockwiseTurnsForNorth, (4 - clockwiseTurnsForNorth) % 4);
+            int turnCostEast = 1000 * Math.Min(clockwiseTurnsForEast, (4 - clockwiseTurnsForEast) % 4);
+            int turnCostSouth = 1000 * Math.Min(clockwiseTurnsForSouth, (4 - clockwiseTurnsForSouth) % 4);
+            int turnCostWest = 1000 * Math.Min(clockwiseTurnsForWest, (4 - clockwiseTurnsForWest) % 4);
+
+            // List to store viable results (that aren't out of bounds or walls)
+            List<(int x, int y, int cost, Direction d)> result = new List<(int x, int y, int cost, Direction d)>();
+            // All possible directions to check, North -> East -> South -> West
+            // Remember y is +ve in a South direction due to line 0 starting at the top of the file
+            List<(int x, int y, int cost, Direction d)> coords = new List<(int x, int y, int cost, Direction d)>{
+                (x: pos.x  , y: pos.y-1, cost: 1 + turnCostNorth, d: Direction.North),
+                (x: pos.x+1, y: pos.y  , cost: 1 + turnCostEast, d: Direction.East),
+                (x: pos.x  , y: pos.y+1, cost: 1 + turnCostSouth, d: Direction.South),
+                (x: pos.x-1, y: pos.y  , cost: 1 + turnCostWest, d: Direction.West),
             };
             foreach (var n in coords)
             {
@@ -83,10 +122,18 @@ namespace AOC
         public void Map()
         {
             Console.WriteLine("Mapping maze...");
-            frontier.Enqueue(start);
+            frontier.Enqueue(start, 0);
             cameFrom.Add(start, start);
+            costSoFar.Add(start, (0, startingDirection));
+
             // Loop over all squares f in frontier, finding neighbours until
             // none are left, logging if we haven't visited them already
+            // This is not just a BFS, we need to take into account the cost of the neighbour
+            // since some require turns, so take this into account when logging previously
+            // seen squares as we may find a better route to one
+            // TODO: Can we still exit early, since it is a frontier square and not a neighbour the priority
+            // queue should ensure we already fully mapped the best way there by the time it is leaving
+            // the frontier queue
             while (frontier.Count != 0)
             {
                 if (debugmode) { Console.WriteLine("Getting neighbours..."); }
@@ -97,21 +144,33 @@ namespace AOC
                     Console.WriteLine("Reached destination at {0},{1}, ending search", f.x, f.y);
                     break;
                 }
-                var nbs = GetNeighbours(f);
+                var nbs = GetNeighbours(f, costSoFar[f].d);
                 if (debugmode) { Console.WriteLine("Got {0} neighbours for {1},{2}", nbs.Count, f.x, f.y); }
                 foreach (var n in nbs)
                 {
-                    if (cameFrom.ContainsKey(n))
+                    (int x, int y) key = (n.x, n.y);
+                    (int cost, Direction d) newCostDir = (costSoFar[f].cost + n.cost, n.d);
+                    if (costSoFar.ContainsKey(key) && costSoFar[key].cost <= newCostDir.cost)
                     {
-                        // Been here already
+                        // Been here already, and cost is no better now
                         if (debugmode) { Console.WriteLine("Already mapped square {0},{1}", n.x, n.y); }
+                    }
+                    else if (costSoFar.ContainsKey(key))
+                    {
+                        // Update an existing record with a better cost
+                        if (debugmode) { Console.WriteLine("Found a better cost for square {0},{1}", n.x, n.y); }
+                        costSoFar[key] = newCostDir;
+                        cameFrom[key] = f;
+                        // TODO: Don't need to queue it to frontier again since it was already visited?
                     }
                     else
                     {
+                        // Not visited here before
                         if (debugmode) { Console.WriteLine("Adding square {0},{1} to frontier", n.x, n.y); }
-                        frontier.Enqueue(n);
+                        frontier.Enqueue(key, newCostDir.cost);
                         if (debugmode) { Console.WriteLine("Adding square {0},{1} to cameFrom, ref. {2},{3}", n.x, n.y, f.x, f.y); }
-                        cameFrom.Add(n, f);
+                        costSoFar.Add(key, newCostDir);
+                        cameFrom.Add(key, f);
                     }
                 }
                 if (debugmode)
@@ -209,6 +268,7 @@ namespace AOC
                 m.Print();
             }
             m.Map();
+            sum = m.Cost;
 
             // Output
             Console.WriteLine("--");

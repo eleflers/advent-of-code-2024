@@ -91,6 +91,12 @@ namespace AOC
             {
                 if (debugmode) { Console.WriteLine("Getting neighbours..."); }
                 var f = frontier.Dequeue();
+                if (f == end)
+                {
+                    // Found destination, quit early
+                    Console.WriteLine("Reached destination at {0},{1}, ending search", f.x, f.y);
+                    break;
+                }
                 var nbs = GetNeighbours(f);
                 if (debugmode) { Console.WriteLine("Got {0} neighbours for {1},{2}", nbs.Count, f.x, f.y); }
                 foreach (var n in nbs)

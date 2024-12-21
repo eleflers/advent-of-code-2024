@@ -150,7 +150,7 @@ namespace AOC
                 {
                     (int x, int y) key = (n.x, n.y);
                     (int cost, Direction d) newCostDir = (costSoFar[f].cost + n.cost, n.d);
-                    if (costSoFar.ContainsKey(key) && costSoFar[key].cost < newCostDir.cost)
+                    if (costSoFar.ContainsKey(key) && costSoFar[key].cost + 1000 < newCostDir.cost)
                     {
                         // Been here already, and cost is no better now
                         if (debugmode) { Console.WriteLine("Already mapped square {0},{1}", n.x, n.y); }

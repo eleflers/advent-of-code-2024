@@ -150,18 +150,19 @@ namespace AOC
                 {
                     (int x, int y) key = (n.x, n.y);
                     (int cost, Direction d) newCostDir = (costSoFar[f].cost + n.cost, n.d);
-                    if (costSoFar.ContainsKey(key) && costSoFar[key].cost <= newCostDir.cost)
+                    if (costSoFar.ContainsKey(key) && costSoFar[key].cost < newCostDir.cost)
                     {
                         // Been here already, and cost is no better now
                         if (debugmode) { Console.WriteLine("Already mapped square {0},{1}", n.x, n.y); }
                     }
                     else if (costSoFar.ContainsKey(key))
                     {
-                        // Update an existing record with a better cost
+                        // Update an existing record with a better or the same cost
                         if (debugmode) { Console.WriteLine("Found a better cost for square {0},{1}", n.x, n.y); }
                         costSoFar[key] = newCostDir;
                         cameFrom[key] = f;
-                        // TODO: Don't need to queue it to frontier again since it was already visited?
+                        // TODO: Do we need to add it again to frontier queue? It has a new lower cost and might have ripple effects?
+                        frontier.Enqueue(key, newCostDir.cost);
                     }
                     else
                     {

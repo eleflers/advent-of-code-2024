@@ -3,33 +3,25 @@ using System.IO;
 
 namespace AOC
 {
-    public class Point
-    {
-        int x;
-        int y;
-        public Point(int x, int y)
-        {
-            this.x = x;
-            this.y = y;
-        }
-    }
     public class Maze
     {
-        private Queue<Point> frontier = new Queue<Point>();
-        private Dictionary<Point, Point> cameFrom = new Dictionary<Point, Point>();
-        private Point start = null;
-        private Point end = null;
+        private Queue<(int x, int y)> frontier = new Queue<(int x, int y)>();
+        private Dictionary<(int x, int y), (int x, int y)> cameFrom = new Dictionary<(int x, int y), (int x, int y)>();
+        private (int x, int y) start;
+        private (int x, int y) end;
         private int sizeX;
         private int sizeY;
         //private bool[,] map; // More efficient alternative using 2D arrays?
         private List<List<char>> map;
-        public Maze(List<string> input, Point start, Point end)
+        private bool debugmode;
+        public Maze(List<string> input, (int x, int y) start, (int x, int y) end, bool debugmode)
         {
             this.sizeX = input.First().Length;
             this.sizeY = input.Count;
             this.start = start;
             this.end = end;
-            Console.Write("Parsing map... ");
+            this.debugmode = debugmode;
+            Console.Write("Parsing maze... ");
             this.map = new List<List<char>>();
             for (int y = 0; y < sizeY; y++)
             {
@@ -45,6 +37,67 @@ namespace AOC
             {
                 string line = new string(map[y].ToArray<char>());
                 Console.WriteLine(line);
+            }
+        }
+        private char GetChar(int x, int y)
+        {
+            return map[y][x];
+        }
+        private List<(int x, int y)> GetNeighbours((int x, int y) pos)
+        {
+            List<(int x, int y)> result = new List<(int x, int y)>();
+            List<(int x, int y)> coords = new List<(int x, int y)>{
+                (x: pos.x  , y: pos.y+1),
+                (x: pos.x  , y: pos.y-1),
+                (x: pos.x+1, y: pos.y  ),
+                (x: pos.x-1, y: pos.y  ),
+            };
+            foreach (var n in coords)
+            {
+                if (n.x >= 0 && n.x < sizeX)
+                {
+                    if (n.y >= 0 && n.y < sizeY)
+                    {
+                        // In bounds
+                        char c = GetChar(n.x, n.y);
+                        if (c != '#')
+                        {
+                            // Anything other than a wall is good
+                            result.Add(n);
+                        }
+                    }
+                }
+            }
+            return result;
+        }
+        public void Map()
+        {
+            Console.WriteLine("Mapping maze...");
+            frontier.Enqueue(start);
+            cameFrom.Add(start, start);
+            // Loop over all squares f in frontier, finding neighbours until
+            // none are left, logging if we haven't visited them already
+            while (frontier.Count != 0)
+            {
+                if (debugmode) { Console.WriteLine("Getting neighbours..."); }
+                var f = frontier.Dequeue();
+                var nbs = GetNeighbours(f);
+                if (debugmode) { Console.WriteLine("Got {0} neighbours for {1},{2}", nbs.Count, f.x, f.y); }
+                foreach (var n in nbs)
+                {
+                    if (cameFrom.ContainsKey(n))
+                    {
+                        // Been here already
+                        if (debugmode) { Console.WriteLine("Already mapped square {0},{1}", n.x, n.y); }
+                    }
+                    else
+                    {
+                        if (debugmode) { Console.WriteLine("Adding square {0},{1} to frontier", n.x, n.y); }
+                        frontier.Enqueue(n);
+                        if (debugmode) { Console.WriteLine("Adding square {0},{1} to cameFrom, ref. {2},{3}", n.x, n.y, f.x, f.y); }
+                        cameFrom.Add(n, f);
+                    }
+                }
             }
         }
     }
@@ -93,8 +146,8 @@ namespace AOC
             String? line;
             int lineNr = 0;
             List<string> lines = new List<string>();
-            Point start = null;
-            Point end = null;
+            (int x, int y) start = (0, 0);
+            (int x, int y) end = (0, 0);
             using (var streamReader = new StreamReader(filename))
             {
                 while ((line = streamReader.ReadLine()) != null && (!debugmode || debuglimit == -1 || lineNr < debuglimit))
@@ -113,14 +166,14 @@ namespace AOC
                     int pos = line.IndexOf('S');
                     if (pos != -1)
                     {
-                        Console.WriteLine("Found 'S' at line {lineNr} column {pos}");
-                        start = new Point(pos, lineNr);
+                        Console.WriteLine("Found 'S' at line {0} column {1}", lineNr, pos);
+                        start = (pos, lineNr);
                     }
                     pos = line.IndexOf('E');
                     if (pos != -1)
                     {
-                        Console.WriteLine("Found 'E' at line {lineNr} column {pos}");
-                        end = new Point(pos, lineNr);
+                        Console.WriteLine("Found 'E' at line {0} column {1}", lineNr, pos);
+                        end = (pos, lineNr);
                     }
 
                     lineNr++;
@@ -128,17 +181,17 @@ namespace AOC
             }
 
             // Processing
-            Maze m = new Maze(lines, start, end);
+            Maze m = new Maze(lines, start, end, debugmode);
             if (debugmode)
             {
                 m.Print();
             }
-
+            m.Map();
 
             // Output
             Console.WriteLine("--");
             Console.WriteLine("Sum = {0}", sum);
-            if (sum == 123)
+            if (sum == 7036 || sum == 11048)
             {
                 Console.WriteLine("Answer matches example expected answer");
             }

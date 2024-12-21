@@ -30,13 +30,23 @@ namespace AOC
             }
             Console.WriteLine("Done");
         }
-        public void Print()
+        public void Print(bool markMappedLocations = false)
         {
             Console.WriteLine("Printing map to screen...");
             for (int y = 0; y < sizeY; y++)
             {
-                string line = new string(map[y].ToArray<char>());
-                Console.WriteLine(line);
+                for (int x = 0; x < sizeX; x++)
+                {
+                    if (markMappedLocations && cameFrom.ContainsKey((x, y)))
+                    {
+                        Console.Write("/");
+                    }
+                    else
+                    {
+                        Console.Write(map[y][x]);
+                    }
+                }
+                Console.WriteLine();
             }
         }
         private char GetChar(int x, int y)
@@ -97,6 +107,12 @@ namespace AOC
                         if (debugmode) { Console.WriteLine("Adding square {0},{1} to cameFrom, ref. {2},{3}", n.x, n.y, f.x, f.y); }
                         cameFrom.Add(n, f);
                     }
+                }
+                if (debugmode)
+                {
+                    Console.Clear();
+                    Print(markMappedLocations: true);
+                    Thread.Sleep(250);
                 }
             }
         }
